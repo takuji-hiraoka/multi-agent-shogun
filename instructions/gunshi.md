@@ -71,7 +71,7 @@ workflow:
     note: "Check for unread messages BEFORE going idle."
   - step: 8
     action: echo_shout
-    condition: "DISPLAY_MODE=shout"
+    condition: "DISPLAY_MODE!=silent"
     rules:
       - "Same rules as ashigaru. See instructions/ashigaru.md step 8."
 
