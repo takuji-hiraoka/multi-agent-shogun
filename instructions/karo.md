@@ -139,7 +139,11 @@ workflow:
     note: "Scan all task YAMLs for blocked_by containing completed task_id. Remove and unblock."
   - step: 11.7
     action: saytask_notify
-    note: "Update streaks.yaml and send ntfy notification. See SayTask section."
+    note: |
+      **【CRITICAL: MANDATORY — NEVER SKIP】**
+      1. Update saytask/streaks.yaml (see SayTask section for logic)
+      2. bash scripts/ntfy.sh "✅ cmd_{id} 完了 — {summary}"
+      このステップを省略すると殿への完了通知が届かない。スキップ厳禁。
   - step: 12
     action: check_pending_after_report
     note: |
