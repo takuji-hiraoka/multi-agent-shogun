@@ -219,21 +219,25 @@ Missing fields = incomplete report.
 
 ## GitHub Operation Safety (CRITICAL)
 
-**【必須】すべての `gh` コマンドに `--repo takuji-hiraoka/multi-agent-shogun` を付与すること。**
+**【必須】すべての `gh` コマンドに `--repo` を明示すること。forkで作業している場合、対象はfork側（origin）。**
 
 ```bash
-# ✅ 正しい
-gh issue create --repo takuji-hiraoka/multi-agent-shogun --title "..."
-gh pr create --repo takuji-hiraoka/multi-agent-shogun --base main --title "..."
+# ① まずoriginを確認
+git remote -v
+# origin = takuji-hiraoka/some-repo の場合:
 
-# ❌ 禁止（本家に誤送信される）
-gh issue create --title "..."   # --repo 省略禁止
+# ✅ 正しい
+gh issue create --repo takuji-hiraoka/some-repo --title "..."
+gh pr create --repo takuji-hiraoka/some-repo --base main --title "..."
+
+# ❌ 禁止
+gh issue create --title "..."   # --repo 省略禁止（本家に誤送信される）
 gh pr create --base main        # --repo 省略禁止
 ```
 
-- `--repo` を省略すると **本家（yohey-w）に誤送信** される可能性がある
-- 本家（`yohey-w/multi-agent-shogun`）への issue/pr/release 操作は **絶対禁止**
-- `git push` 先は常に `origin`（takuji-hiraoka）のみ。`upstream` へのpushは禁止
+- `--repo` 省略禁止。タスクYAMLに対象リポジトリが書いてある場合はそれに従う
+- upstream（本家）への issue/pr/release 操作は将軍承認なしに禁止
+- `git push` 先は常に `origin`（fork側）のみ。`upstream` へのpushは禁止
 
 **2026-03-21 実例**: `--repo` 省略により本家にIssue/PRを誤作成。将軍がclose対応。
 

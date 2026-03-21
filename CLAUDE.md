@@ -307,29 +307,30 @@ When processing large datasets (30+ items requiring individual web search, API c
 
 # GitHub Operation Safety (all agents)
 
-**【CRITICAL】すべてのGitHub操作はfork（takuji-hiraoka）を対象にすること。本家への誤操作はOSSコミュニティに影響する。**
+**【CRITICAL】forkリポジトリで作業している場合、push・Issue・PRは常にfork側（origin）を対象にすること。本家（upstream）への誤操作はOSSコミュニティに影響する。**
+
+## 原則
+
+forkしているのは「本家に影響を与えず、自分の領域で育てたい」という意図がある。この原則はすべてのforkリポジトリに適用される。
 
 ## 必須ルール
 
 | ID | ルール |
 |----|--------|
-| G001 | すべての `gh` コマンド（issue, pr, release等）に `--repo takuji-hiraoka/multi-agent-shogun` を明示すること |
-| G002 | 本家（`yohey-w/multi-agent-shogun`）への直接操作（issue作成・pr作成・push等）は絶対禁止 |
-| G003 | 本家への操作が必要な場合（upstream sync等）は、将軍の明示的承認を得てから実行すること |
-| G004 | `git push` 先は常に `origin`（takuji-hiraoka）。`upstream` への push は禁止 |
+| G001 | GitHub操作の前に `git remote -v` で origin/upstream を確認し、操作対象を明確にすること |
+| G002 | `gh` コマンド（issue, pr, release等）には `--repo {origin側のowner/repo}` を明示すること。省略禁止 |
+| G003 | upstream（本家）への直接操作（issue作成・pr作成・push等）は将軍の明示的承認なしに禁止 |
+| G004 | `git push` 先は常に `origin`（fork側）。`upstream` への push は禁止 |
 
-## 正しい例 / 誤った例
+## 判定方法
 
 ```bash
-# ✅ 正しい
-gh issue create --repo takuji-hiraoka/multi-agent-shogun --title "..."
-gh pr create --repo takuji-hiraoka/multi-agent-shogun --base main
-
-# ❌ 誤り（本家への誤送信）
-gh issue create --title "..."               # --repo 省略 → 本家に送られる可能性あり
-gh pr create --repo yohey-w/multi-agent-shogun  # 本家を直接指定
+# 作業開始時にoriginを確認
+git remote -v
+# origin が takuji-hiraoka/* → --repo takuji-hiraoka/{repo} を使用
+# upstream が他者のアカウント → そちらへの操作は将軍承認が必要
 ```
 
 ## インシデント記録
 
-- **2026-03-21 cmd_008**: 足軽が `--repo` を指定せず `yohey-w/multi-agent-shogun` にIssue#97/#99・PR#98/#100を誤作成。将軍がclose対応。
+- **2026-03-21 cmd_008**: 足軽が `--repo` を指定せず本家（upstream）にIssue#97/#99を誤作成。将軍がclose対応。
