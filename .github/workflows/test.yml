@@ -7,6 +7,7 @@ on:
       - 'feature/**'  # feature/で始まる全ブランチ
       - 'feat/**'     # feat/で始まる全ブランチ
   pull_request:
+  workflow_dispatch:
 
 jobs:
   unit-tests:
