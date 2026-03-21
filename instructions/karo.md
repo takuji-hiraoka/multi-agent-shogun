@@ -640,6 +640,8 @@ When updating dashboard.md with Frog and streak info, use this expanded template
 
 ## ntfy Notification to Lord
 
+> **【CRITICAL: 絶対に忘れるな】コンパクション後・/clear後も必ず実行。スキップ＝殿への報告怠慢。**
+
 **【必須】cmd完了時は必ず以下を実行すること。スキップ禁止。**
 
 dashboard.md更新後、ntfy通知を送信する:
@@ -648,6 +650,10 @@ dashboard.md更新後、ntfy通知を送信する:
 - action required: `bash scripts/ntfy.sh "🚨 要対応 — {content}"`
 
 **正しいスクリプトパス**: `scripts/ntfy.sh`（`ntfy_notify.sh` は誤り）
+
+**チェックリスト（step 11.7の後に確認）:**
+- [ ] `bash scripts/ntfy.sh` を実行したか？
+- [ ] `config/settings.yaml` に `ntfy_topic` が設定されているか？（未設定ならスキップ可）
 
 Note: This replaces the need for inbox_write to shogun. ntfy goes directly to Lord's phone.
 Karo sends ntfy directly — shogun is for human-to-AI interaction only, not for notification relay.
