@@ -136,6 +136,11 @@ NEW_CONTEXT_SENT=${NEW_CONTEXT_SENT:-0}
 # When set, skip follow-up nudge for this cycle (agent already knows what to do).
 STARTUP_PROMPT_SENT=${STARTUP_PROMPT_SENT:-0}
 
+# ─── Task stall detection (cmd_011 S1) ───
+# Detects when all inbox messages are read but assigned task hasn't been started.
+TASK_STALL_FIRST_SEEN=${TASK_STALL_FIRST_SEEN:-0}
+TASK_STALL_THRESHOLD=${TASK_STALL_THRESHOLD:-180}
+
 # ─── Phase feature flags (cmd_107 Phase 1/2/3) ───
 # ASW_PHASE:
 #   1 = self-watch base (compatible)
@@ -1145,6 +1150,33 @@ for s in data.get('specials', []):
             else
                 timeout 2 tmux send-keys -t "$PANE_TARGET" C-u 2>/dev/null || true
             fi
+        fi
+        # ─── Task stall detection (cmd_011 S1) ───
+        # All inbox messages are read, but check if task is still assigned (not started).
+        # This catches the case where an agent marks inbox read but doesn't start work
+        # (e.g., due to compaction, context loss, or stop_hook not firing).
+        local _task_yaml="$SCRIPT_DIR/queue/tasks/${AGENT_ID}.yaml"
+        if [ -f "$_task_yaml" ]; then
+            local _task_status
+            _task_status=$(grep '^status:' "$_task_yaml" 2>/dev/null | head -1 | sed 's/^status:[[:space:]]*//' | tr -d '"' || true)
+            if [ "$_task_status" = "assigned" ]; then
+                local _now
+                _now=$(date +%s)
+                if [ "$TASK_STALL_FIRST_SEEN" -eq 0 ]; then
+                    TASK_STALL_FIRST_SEEN=$_now
+                fi
+                local _stall_age=$(( _now - TASK_STALL_FIRST_SEEN ))
+                if [ "$_stall_age" -ge "$TASK_STALL_THRESHOLD" ]; then
+                    echo "[$(date)] TASK STALL: $AGENT_ID has assigned task for ${_stall_age}s, triggering auto-recovery" >&2
+                    enqueue_recovery_task_assigned
+                    TASK_STALL_FIRST_SEEN=0
+                fi
+            else
+                TASK_STALL_FIRST_SEEN=0
+            fi
+        else
+            # task YAML が存在しない場合もタイマーをリセット（消失・未割当状態）
+            TASK_STALL_FIRST_SEEN=0
         fi
     fi
 }
