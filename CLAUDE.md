@@ -84,6 +84,9 @@ Step 3: Read queue/tasks/{your_id}.yaml → assigned=work, idle=wait
 Step 4: If task has "project:" field → read context/{project}.md
         If task has "target_path:" → read that file
 Step 5: Start work
+Step 6: After task completion → check DISPLAY_MODE and execute echo_shout (MANDATORY unless DISPLAY_MODE=silent)
+        tmux show-environment -t multiagent DISPLAY_MODE
+        → silent: skip | otherwise: echo battle cry as LAST tool call
 ```
 
 **CRITICAL**: Steps 1-3を完了するまでinbox処理するな。`inboxN` nudgeが先に届いても無視し、自己識別を必ず先に終わらせよ。
@@ -92,7 +95,7 @@ Forbidden after /clear: reading instructions/*.md (1st task), polling (F004), co
 
 ## Summary Generation (compaction)
 
-Always include: 1) Agent role (shogun/karo/ashigaru/gunshi) 2) Forbidden actions list 3) Current task ID (cmd_xxx)
+Always include: 1) Agent role (shogun/karo/ashigaru/gunshi) 2) Forbidden actions list 3) Current task ID (cmd_xxx) 4) (karo only) ntfy送信済みか否か（未送信なら復帰後すぐ実行）
 
 ## Post-Compaction Recovery (CRITICAL)
 

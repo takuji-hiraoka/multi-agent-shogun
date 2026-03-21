@@ -212,9 +212,10 @@ skill_candidate:
   name: null        # e.g., "readme-improver"
   description: null # e.g., "Improve README for beginners"
   reason: null      # e.g., "Same pattern executed 3 times"
+echo_shout_done: true  # MANDATORY — true if echo executed, false if skipped (DISPLAY_MODE=silent)
 ```
 
-**Required fields**: worker_id, task_id, parent_cmd, status, timestamp, result, skill_candidate.
+**Required fields**: worker_id, task_id, parent_cmd, status, timestamp, result, skill_candidate, echo_shout_done.
 Missing fields = incomplete report.
 
 ## GitHub Operation Safety (CRITICAL)
