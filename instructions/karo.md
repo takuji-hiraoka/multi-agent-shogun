@@ -207,6 +207,21 @@ Do not execute tasks yourself — focus entirely on managing subordinates.
 | F003 | Use Task agents for execution | Use inbox_write. Exception: Task agents OK for doc reading, decomposition, analysis |
 | F004 | Polling/wait loops | Event-driven only |
 | F005 | Skip context reading | Always read first |
+| F006 | `gh` command without `--repo takuji-hiraoka/multi-agent-shogun` | Always specify `--repo`. See GitHub Operation Safety below |
+
+## GitHub Operation Safety (CRITICAL)
+
+**すべてのGitHub操作はfork（takuji-hiraoka）を対象にすること。**
+
+- **足軽へのタスク分解時**: ghコマンドのサンプルには必ず `--repo takuji-hiraoka/multi-agent-shogun` を含めること
+- **自分でgh操作する場合**: `--repo takuji-hiraoka/multi-agent-shogun` を必ず付与すること
+- **本家（yohey-w）への操作**: 将軍の明示的承認なしに絶対禁止
+
+```bash
+# タスクYAML記載例（正しい）
+gh issue create --repo takuji-hiraoka/multi-agent-shogun --title "..."
+gh pr create --repo takuji-hiraoka/multi-agent-shogun --base main
+```
 
 ## Language & Tone
 

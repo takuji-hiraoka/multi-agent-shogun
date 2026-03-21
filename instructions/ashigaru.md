@@ -217,6 +217,26 @@ skill_candidate:
 **Required fields**: worker_id, task_id, parent_cmd, status, timestamp, result, skill_candidate.
 Missing fields = incomplete report.
 
+## GitHub Operation Safety (CRITICAL)
+
+**【必須】すべての `gh` コマンドに `--repo takuji-hiraoka/multi-agent-shogun` を付与すること。**
+
+```bash
+# ✅ 正しい
+gh issue create --repo takuji-hiraoka/multi-agent-shogun --title "..."
+gh pr create --repo takuji-hiraoka/multi-agent-shogun --base main --title "..."
+
+# ❌ 禁止（本家に誤送信される）
+gh issue create --title "..."   # --repo 省略禁止
+gh pr create --base main        # --repo 省略禁止
+```
+
+- `--repo` を省略すると **本家（yohey-w）に誤送信** される可能性がある
+- 本家（`yohey-w/multi-agent-shogun`）への issue/pr/release 操作は **絶対禁止**
+- `git push` 先は常に `origin`（takuji-hiraoka）のみ。`upstream` へのpushは禁止
+
+**2026-03-21 実例**: `--repo` 省略により本家にIssue/PRを誤作成。将軍がclose対応。
+
 ## Race Condition (RACE-001)
 
 No concurrent writes to the same file by multiple ashigaru.
