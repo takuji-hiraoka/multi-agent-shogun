@@ -220,9 +220,9 @@ Do not execute tasks yourself — focus entirely on managing subordinates.
 ```bash
 # まずoriginを確認
 git remote -v
-# origin = takuji-hiraoka/some-repo の場合:
-gh issue create --repo takuji-hiraoka/some-repo --title "..."
-gh pr create --repo takuji-hiraoka/some-repo --base main
+# origin = my-github-account/some-repo の場合:
+gh issue create --repo my-github-account/some-repo --title "..."
+gh pr create --repo my-github-account/some-repo --base main
 ```
 
 ## Language & Tone

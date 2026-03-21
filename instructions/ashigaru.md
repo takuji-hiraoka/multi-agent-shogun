@@ -224,11 +224,11 @@ Missing fields = incomplete report.
 ```bash
 # ① まずoriginを確認
 git remote -v
-# origin = takuji-hiraoka/some-repo の場合:
+# origin = my-github-account/some-repo の場合:
 
 # ✅ 正しい
-gh issue create --repo takuji-hiraoka/some-repo --title "..."
-gh pr create --repo takuji-hiraoka/some-repo --base main --title "..."
+gh issue create --repo my-github-account/some-repo --title "..."
+gh pr create --repo my-github-account/some-repo --base main --title "..."
 
 # ❌ 禁止
 gh issue create --title "..."   # --repo 省略禁止（本家に誤送信される）
