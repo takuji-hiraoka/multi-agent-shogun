@@ -117,6 +117,21 @@ UNREAD_COUNT=$(grep -c 'read: false' "$INBOX" 2>/dev/null || true)
 
 FLAG="${IDLE_FLAG_DIR:-/tmp}/shogun_idle_${AGENT_ID}"
 if [ "${UNREAD_COUNT:-0}" -eq 0 ]; then
+    # ─── Task stall check (cmd_011 S2) ───
+    # Block BEFORE inotifywait if task is assigned but not started.
+    # Fail-fast: no need to wait 55s if we're going to block anyway.
+    TASK_YAML="$SCRIPT_DIR/queue/tasks/${AGENT_ID}.yaml"
+    if [ -f "$TASK_YAML" ]; then
+        TASK_STATUS=$(grep -oP 'status:\s*\K\S+' "$TASK_YAML" 2>/dev/null | head -1 || true)
+        if [ "$TASK_STATUS" = "assigned" ]; then
+            python3 -c "
+import json
+reason = 'タスク未着手 (status=assigned)。queue/tasks/${AGENT_ID}.yamlを読んで作業を開始せよ。'
+print(json.dumps({'decision': 'block', 'reason': reason}, ensure_ascii=False))
+" 2>/dev/null || echo "{\"decision\":\"block\",\"reason\":\"タスク未着手(status=assigned)。task YAMLを読んで作業開始せよ。\"}"
+            exit 0
+        fi
+    fi
     touch "$FLAG"
     # inotifywait で inbox 変更を最大55秒待機
     # dashboard.md も監視（shogunの場合のみ）

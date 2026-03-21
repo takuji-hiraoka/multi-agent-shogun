@@ -147,3 +147,63 @@ YAML
     [ -f "$TEST_TMP/inbox_write_calls.log" ]
     grep -q "report_completed" "$TEST_TMP/inbox_write_calls.log"
 }
+
+@test "T-HOOK-011 (S2): no unread + task status=assigned produces block JSON" {
+    # Inbox fully read but task not started — stop_hook should block
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks"
+    cat > "$TEST_TMP/queue/inbox/ashigaru1.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: karo
+    type: task_assigned
+    content: "タスク指示"
+    read: true
+YAML
+    cat > "$TEST_TMP/queue/tasks/ashigaru1.yaml" << 'YAML'
+task_id: subtask_test_001
+worker_id: ashigaru1
+status: assigned
+YAML
+    run_hook '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"decision"'
+    echo "$output" | grep -q '"block"'
+}
+
+@test "T-HOOK-012 (S2): no unread + task status=done exits 0 (no block)" {
+    # Inbox fully read and task is done — normal idle, should not block
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks"
+    cat > "$TEST_TMP/queue/inbox/ashigaru1.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: karo
+    type: task_assigned
+    content: "タスク指示"
+    read: true
+YAML
+    cat > "$TEST_TMP/queue/tasks/ashigaru1.yaml" << 'YAML'
+task_id: subtask_test_002
+worker_id: ashigaru1
+status: done
+YAML
+    run_hook '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    [ -z "$output" ] || ! echo "$output" | grep -q '"block"'
+}
+
+@test "T-HOOK-013 (S2): no unread + no task YAML exits 0 (no block)" {
+    # No task YAML exists — normal idle (e.g., agent has no task)
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks"
+    cat > "$TEST_TMP/queue/inbox/ashigaru1.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: karo
+    type: task_assigned
+    content: "古い完了タスク"
+    read: true
+YAML
+    # task YAMLなし
+    run_hook '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    [ -z "$output" ] || ! echo "$output" | grep -q '"block"'
+}
