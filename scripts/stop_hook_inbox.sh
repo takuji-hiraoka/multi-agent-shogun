@@ -122,7 +122,7 @@ if [ "${UNREAD_COUNT:-0}" -eq 0 ]; then
     # Fail-fast: no need to wait 55s if we're going to block anyway.
     TASK_YAML="$SCRIPT_DIR/queue/tasks/${AGENT_ID}.yaml"
     if [ -f "$TASK_YAML" ]; then
-        TASK_STATUS=$(grep -oP 'status:\s*\K\S+' "$TASK_YAML" 2>/dev/null | head -1 || true)
+        TASK_STATUS=$(grep '^status:' "$TASK_YAML" 2>/dev/null | head -1 | sed 's/^status:[[:space:]]*//' | tr -d '"' || true)
         if [ "$TASK_STATUS" = "assigned" ]; then
             python3 -c "
 import json

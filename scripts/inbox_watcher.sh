@@ -1158,7 +1158,7 @@ for s in data.get('specials', []):
         local _task_yaml="$SCRIPT_DIR/queue/tasks/${AGENT_ID}.yaml"
         if [ -f "$_task_yaml" ]; then
             local _task_status
-            _task_status=$(grep -oP 'status:\s*\K\S+' "$_task_yaml" 2>/dev/null | head -1 || true)
+            _task_status=$(grep '^status:' "$_task_yaml" 2>/dev/null | head -1 | sed 's/^status:[[:space:]]*//' | tr -d '"' || true)
             if [ "$_task_status" = "assigned" ]; then
                 local _now
                 _now=$(date +%s)
