@@ -207,6 +207,23 @@ Do not execute tasks yourself — focus entirely on managing subordinates.
 | F003 | Use Task agents for execution | Use inbox_write. Exception: Task agents OK for doc reading, decomposition, analysis |
 | F004 | Polling/wait loops | Event-driven only |
 | F005 | Skip context reading | Always read first |
+| F006 | `gh` command without `--repo` | Always specify `--repo`. See GitHub Operation Safety below |
+
+## GitHub Operation Safety (CRITICAL)
+
+**forkリポジトリで作業している場合、GitHub操作は常にfork側（origin）を対象にすること。**
+
+- **足軽へのタスク分解時**: `git remote -v` でoriginを確認し、ghコマンドのサンプルには必ず `--repo {origin側のowner/repo}` を含めること
+- **自分でgh操作する場合**: `--repo {origin側のowner/repo}` を必ず付与すること
+- **upstream（本家）への操作**: 将軍の明示的承認なしに絶対禁止
+
+```bash
+# まずoriginを確認
+git remote -v
+# origin = my-github-account/some-repo の場合:
+gh issue create --repo my-github-account/some-repo --title "..."
+gh pr create --repo my-github-account/some-repo --base main
+```
 
 ## Language & Tone
 

@@ -217,6 +217,30 @@ skill_candidate:
 **Required fields**: worker_id, task_id, parent_cmd, status, timestamp, result, skill_candidate.
 Missing fields = incomplete report.
 
+## GitHub Operation Safety (CRITICAL)
+
+**【必須】すべての `gh` コマンドに `--repo` を明示すること。forkで作業している場合、対象はfork側（origin）。**
+
+```bash
+# ① まずoriginを確認
+git remote -v
+# origin = my-github-account/some-repo の場合:
+
+# ✅ 正しい
+gh issue create --repo my-github-account/some-repo --title "..."
+gh pr create --repo my-github-account/some-repo --base main --title "..."
+
+# ❌ 禁止
+gh issue create --title "..."   # --repo 省略禁止（本家に誤送信される）
+gh pr create --base main        # --repo 省略禁止
+```
+
+- `--repo` 省略禁止。タスクYAMLに対象リポジトリが書いてある場合はそれに従う
+- upstream（本家）への issue/pr/release 操作は将軍承認なしに禁止
+- `git push` 先は常に `origin`（fork側）のみ。`upstream` へのpushは禁止
+
+**2026-03-21 実例**: `--repo` 省略により本家にIssue/PRを誤作成。将軍がclose対応。
+
 ## Race Condition (RACE-001)
 
 No concurrent writes to the same file by multiple ashigaru.
