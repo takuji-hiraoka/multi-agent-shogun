@@ -567,6 +567,26 @@ Karo and Gunshi update dashboard.md. Gunshi updates during quality check aggrega
 | Notification sent | ntfy + streaks | Send completion notification |
 | Action needed | 🚨 要対応 | Items requiring lord's judgment |
 
+### 戦果テーブル: 成果物列ルール
+
+戦果テーブルには「成果物」列を必ず含めること:
+
+```markdown
+| 時刻 | 戦場 | 任務 | 結果 | 成果物 |
+```
+
+**記載対象**（untracked/git管理外のファイル）:
+- `reports/` 配下の新規作成ファイル
+- `config/` 配下の変更ファイル
+- `context/` 配下の新規作成ファイル
+- `queue/reports/` 配下の主要レポート
+- `instructions/` 配下の変更ファイル
+- その他プロジェクトルート直下のファイル変更
+
+**省略対象**（Issue/PRで追跡可能なもの）:
+- 外部プロジェクト（`projects/` 配下）のgit管理下コード変更
+- git操作のみのcmd（push/merge/sync等）→「なし（git操作のみ）」と記載
+
 ### Checklist Before Every Dashboard Update
 
 - [ ] Does the lord need to decide something?
