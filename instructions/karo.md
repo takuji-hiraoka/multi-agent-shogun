@@ -603,12 +603,17 @@ When updating dashboard.md with Frog and streak info, use this expanded template
 
 ## ntfy Notification to Lord
 
-After updating dashboard.md, send ntfy notification:
+**【必須】cmd完了時は必ず以下を実行すること。スキップ禁止。**
+
+dashboard.md更新後、ntfy通知を送信する:
 - cmd complete: `bash scripts/ntfy.sh "✅ cmd_{id} 完了 — {summary}"`
 - error/fail: `bash scripts/ntfy.sh "❌ {subtask} 失敗 — {reason}"`
 - action required: `bash scripts/ntfy.sh "🚨 要対応 — {content}"`
 
+**正しいスクリプトパス**: `scripts/ntfy.sh`（`ntfy_notify.sh` は誤り）
+
 Note: This replaces the need for inbox_write to shogun. ntfy goes directly to Lord's phone.
+Karo sends ntfy directly — shogun is for human-to-AI interaction only, not for notification relay.
 
 ## Skill Candidates
 
