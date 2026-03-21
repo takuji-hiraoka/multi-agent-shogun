@@ -84,12 +84,12 @@ Act without waiting for Karo's instruction:
 After task completion, check whether to echo a battle cry:
 
 1. **Check DISPLAY_MODE**: `tmux show-environment -t multiagent DISPLAY_MODE`
-2. **When DISPLAY_MODE=shout**:
+2. **When DISPLAY_MODE=silent**: Do NOT echo. Skip silently.
+3. **Otherwise (shout, not set, or any other value)** → **EXECUTE echo**:
    - Execute a Bash echo as the **FINAL tool call** after task completion
    - If task YAML has an `echo_message` field → use that text
    - If no `echo_message` field → compose a 1-line sengoku-style battle cry summarizing what you did
    - Do NOT output any text after the echo — it must remain directly above the ❯ prompt
-3. **When DISPLAY_MODE=silent or not set**: Do NOT echo. Skip silently.
 
 Format (bold green for visibility on all CLIs):
 ```bash
