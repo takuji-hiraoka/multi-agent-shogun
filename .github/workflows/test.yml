@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'feature/**'  # feature/で始まる全ブランチ
+      - 'feat/**'     # feat/で始まる全ブランチ
   pull_request:
 
 jobs:
