@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# pre-commit hook for multi-agent-shogun
+# Install: ln -sf ../../tools/pre-commit .git/hooks/pre-commit
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+FAIL=0
+
+# ──────────────────────────────────────────────
+# 1. bats チェック（必須）
+# ──────────────────────────────────────────────
+if ! command -v bats &>/dev/null; then
+  echo "❌ pre-commit: bats が見つかりません。コミットを阻止します。"
+  echo "   インストール方法: sudo npm install -g bats"
+  exit 1
+fi
+
+# bats-support / bats-assert がなければセットアップ
+if [ ! -d "$REPO_ROOT/tests/test_helper/bats-support" ]; then
+  echo "📦 bats helpers をセットアップ中..."
+  mkdir -p "$REPO_ROOT/tests/test_helper"
+  git clone --depth 1 https://github.com/bats-core/bats-support "$REPO_ROOT/tests/test_helper/bats-support" -q
+  git clone --depth 1 https://github.com/bats-core/bats-assert "$REPO_ROOT/tests/test_helper/bats-assert" -q
+fi
+
+# ──────────────────────────────────────────────
+# 2. 全テスト実行（TAP出力でSKIPも同時チェック）
+# ──────────────────────────────────────────────
+# 対象ファイル収集（agent_selfwatch除く）
+ALL_TESTS=()
+for f in "$REPO_ROOT/tests/"*.bats; do
+  [[ "$f" == *agent_selfwatch.bats ]] && continue
+  [ -f "$f" ] && ALL_TESTS+=("$f")
+done
+
+# tests/unit/ があれば追加
+UNIT_DIR="$REPO_ROOT/tests/unit"
+if [ -d "$UNIT_DIR" ]; then
+  ALL_TESTS+=("$UNIT_DIR")
+else
+  echo "ℹ️  tests/unit/ が見つかりません。スキップします。"
+fi
+
+if [ ${#ALL_TESTS[@]} -eq 0 ]; then
+  echo "ℹ️  実行対象テストなし。スキップします。"
+else
+  echo "🧪 pre-commit: テスト実行中（ルート + unit）..."
+  TAP_OUTPUT=$(bats "${ALL_TESTS[@]}" --tap 2>&1) || {
+    echo "$TAP_OUTPUT"
+    echo "❌ テスト失敗"
+    FAIL=1
+  }
+  if [ "$FAIL" -eq 0 ]; then
+    echo "$TAP_OUTPUT" | grep -v "^#" | tail -5
+
+    # SKIP=FAIL ポリシーチェック（同一TAP出力から）
+    SKIP_COUNT=$(echo "$TAP_OUTPUT" | grep -c "^ok.*# skip" || true)
+    if [ "$SKIP_COUNT" -gt 0 ]; then
+      echo "❌ SKIP=FAIL: ${SKIP_COUNT}件のテストがスキップされています"
+      FAIL=1
+    else
+      echo "✅ SKIP=FAIL: 全テスト実行済み（SKIPなし）"
+    fi
+  fi
+fi
+
+# ──────────────────────────────────────────────
+# 3. ShellCheck（lib/, scripts/）
+# ──────────────────────────────────────────────
+echo "🔍 pre-commit: ShellCheck 実行中..."
+if ! command -v shellcheck &>/dev/null; then
+  echo "❌ pre-commit: shellcheck が見つかりません。コミットを阻止します。"
+  echo "   インストール方法: sudo apt-get install shellcheck または brew install shellcheck"
+  exit 1
+fi
+
+for dir in lib scripts; do
+  if [ -d "$REPO_ROOT/$dir" ]; then
+    if ! find "$REPO_ROOT/$dir" -name '*.sh' -type f -exec shellcheck -x -S error {} +; then
+      echo "❌ ShellCheck 失敗: $dir/"
+      FAIL=1
+    fi
+  fi
+done
+
+# ──────────────────────────────────────────────
+# 結果
+# ──────────────────────────────────────────────
+if [ "$FAIL" -eq 1 ]; then
+  echo ""
+  echo "❌ pre-commit: 上記のチェックが失敗しました。コミットを阻止します。"
+  exit 1
+fi
+
+echo ""
+echo "✅ pre-commit: 全チェック通過"
