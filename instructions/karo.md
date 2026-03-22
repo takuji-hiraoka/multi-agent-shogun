@@ -514,12 +514,21 @@ Push notifications to the lord's phone via ntfy. Karo manages streaks and notifi
 2. Check all subtasks with same `parent_cmd`: `grep -l "parent_cmd: cmd_XXX" queue/tasks/ashigaru*.yaml | xargs grep "status:"`
 3. Not all done → skip notification
 4. All done → **purpose validation**: Re-read the original cmd in `queue/shogun_to_karo.yaml`. Compare the cmd's stated purpose against the combined deliverables. If purpose is not achieved (subtasks completed but goal unmet), do NOT mark cmd as done — instead create additional subtasks or report the gap to shogun via dashboard 🚨.
-5. Purpose validated → update `saytask/streaks.yaml`:
+5. **Purpose validated → update `queue/shogun_to_karo.yaml`**: Set `status: done` and add `completed_at: '<timestamp>'` for the cmd entry. **This step is MANDATORY and must not be skipped.**
+6. Update `saytask/streaks.yaml`:
    - `today.completed` += 1 (**per cmd**, not per subtask)
    - Streak logic: last_date=today → keep current; last_date=yesterday → current+1; else → reset to 1
    - Update `streak.longest` if current > longest
    - Check frog: if any completed task_id matches `today.frog` → 🐸 notification, reset frog
-6. Send ntfy notification
+7. Send ntfy notification
+
+### Karo Direct Work Completion (PR merge, direct tasks)
+
+When Karo directly completes a cmd (PR merge, direct implementation, analysis):
+1. Complete the work
+2. **Immediately update `queue/shogun_to_karo.yaml`**: Set `status: done` and `completed_at`. Do NOT defer this step.
+3. Update dashboard.md
+4. Send ntfy notification
 
 ### Eat the Frog (today.frog)
 
@@ -686,6 +695,10 @@ On receiving ashigaru reports, check `skill_candidate` field. If found:
 1. Dedup check
 2. Add to dashboard.md "スキル化候補" section
 3. **Also add summary to 🚨 要対応** (lord's approval needed)
+
+When a skill is created (SKILL.md placed in `~/.claude/skills/<name>/`):
+4. Remove the entry from dashboard.md "🎯スキル化候補" section
+5. Add the entry to dashboard.md "🛠️生成されたスキル" section
 
 ## /clear Protocol (Ashigaru Task Switching)
 
