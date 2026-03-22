@@ -256,6 +256,22 @@ date "+%Y-%m-%dT%H:%M:%S"    # For YAML (ISO 8601)
 
 ## Inbox Communication Rules
 
+### cmd_new処理（MANDATORY: 順序厳守）
+
+cmd_newタイプのメッセージを受信した場合、以下の**順序を必ず守ること**:
+
+1. **先に** `queue/shogun_to_karo.yaml` の `commands:` リストにエントリ追加
+   ```yaml
+   - id: cmd_NNN
+     status: pending
+     received_at: '<inbox messageのtimestamp>'
+     purpose: '<messageの内容を1行で要約>'
+   ```
+2. **その後** inbox メッセージを `read: true` に更新
+
+**この順序を逆にしてはならない。**
+read: trueを先にすると、コンパクションや/clearが入った場合にcmd_newが追跡不能になる。
+
 ### Sending Messages to Ashigaru
 
 ```bash
@@ -583,6 +599,12 @@ Karo and Gunshi update dashboard.md. Gunshi updates during quality check aggrega
 | Report received | 戦果 | Move completed task (newest first, descending) |
 | Notification sent | ntfy + streaks | Send completion notification |
 | Action needed | 🚨 要対応 | Items requiring lord's judgment |
+
+### 📋 受信済み未着手タスク セクション
+
+- `queue/shogun_to_karo.yaml` の `status: pending` のcmdを一覧表示
+- cmd_newを受信して`shogun_to_karo.yaml`にpendingエントリを追加したら、このセクションにも追記
+- タスク着手（in_progress）になったら🔄進行中へ移動し、このセクションから削除
 
 ### 戦果テーブル: 成果物列ルール
 
