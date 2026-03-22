@@ -98,6 +98,9 @@
 !scripts/ratelimit_check.sh
 !scripts/switch_cli.sh
 
+# Tools (version-controlled hooks etc.)
+!tools/
+!tools/pre-commit
 
 # SayTask (sample template only, not actual data)
 !saytask/
