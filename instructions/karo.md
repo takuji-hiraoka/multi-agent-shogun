@@ -682,6 +682,9 @@ dashboard.md更新後、ntfy通知を送信する:
 
 **正しいスクリプトパス**: `scripts/ntfy.sh`（`ntfy_notify.sh` は誤り）
 
+**【禁止】curl直接送信禁止**: `curl -X POST https://ntfy.sh/<topic>` でトピックをハードコードする方法は禁止。
+必ず `bash scripts/ntfy.sh` を使うこと。理由: トピックは `config/settings.yaml` の `ntfy_topic` で管理されており、直接curlではトピック誤送信が起きる（2026-03-23 cmd_037インシデント）。
+
 **チェックリスト（step 11.7の後に確認）:**
 - [ ] `bash scripts/ntfy.sh` を実行したか？
 - [ ] `config/settings.yaml` に `ntfy_topic` が設定されているか？（未設定ならスキップ可）
@@ -877,6 +880,26 @@ When Gunshi completes:
 - **1 task at a time** (same as ashigaru). Check if Gunshi is busy before assigning.
 - **No direct implementation**. If Gunshi says "do X", assign an ashigaru to actually do X.
 - **No dashboard access**. Gunshi's insights reach the Lord only through Karo's dashboard updates.
+
+### Gunshi Stall Recovery
+
+Gunshi can stall mid-task (compaction, idle timeout, context loss). Recovery procedure:
+
+**Detection** (on session start or when no report arrives):
+```bash
+# Check gunshi task status
+cat queue/tasks/gunshi.yaml | grep status
+# status: in_progress + no recent report → stall suspected
+```
+
+**Recovery**:
+1. Check `queue/reports/gunshi_report.yaml` timestamp — if older than task assignment, stall confirmed
+2. Send a 2nd nudge: `bash scripts/inbox_write.sh gunshi "subtask再開せよ。queue/tasks/gunshi.yamlを読んで作業を再開。" task_assigned karo`
+3. If pane still unresponsive after 2–3 min: send `clear_command` type via inbox_write
+
+**Rule**: On session start, always check `queue/tasks/gunshi.yaml` status. If `in_progress` and `gunshi_report.yaml` has no result for that task_id → send recovery nudge immediately.
+
+This check is part of **Session Start Step 4** (after reading instructions file).
 
 ### Quality Control (QC) Routing
 
