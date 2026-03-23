@@ -58,23 +58,12 @@ if [ "$STOP_HOOK_ACTIVE" = "True" ]; then
     # caused a deadlock: agent idle but watcher thinks busy → no nudge → stuck.
     FLAG="${IDLE_FLAG_DIR:-/tmp}/shogun_idle_${AGENT_ID}"
     touch "$FLAG"
-    # stop_hook_active=True 時も inotifywait 待機（連続処理ループ対応）
-    # タイムアウト(55秒)でexit 0 → ループは有限回で終了
-    WATCH_TARGETS_ACTIVE=("$INBOX")
-    if [ "$AGENT_ID" = "shogun" ]; then
-        WATCH_TARGETS_ACTIVE+=("$SCRIPT_DIR/dashboard.md")
-    fi
-    if command -v inotifywait &>/dev/null; then
-        inotifywait -e close_write -e moved_to \
-            --timeout 55 \
-            "${WATCH_TARGETS_ACTIVE[@]}" 2>/dev/null || true
-    fi
+    # inotifywait削除: 即座にunreadチェック（55秒stallを解消）
     UNREAD_COUNT=$(grep -c 'read: false' "$INBOX" 2>/dev/null || true)
     if [ "${UNREAD_COUNT:-0}" -eq 0 ]; then
         exit 0
     fi
-    # 未読あり → fall through to block response (but still from active state)
-    # Reset STOP_HOOK_ACTIVE flag logic: treat as fresh inbox check
+    # 未読あり → fall through to block response
 fi
 
 # ─── Analyze last_assistant_message (v2.1.47+) ───
