@@ -230,7 +230,7 @@ YAML
         source '$WATCHER_HARNESS'
         CLI_TYPE='claude'
         now=\$(date +%s)
-        LAST_CLEAR_TS=\$((now - 10))  # /clear sent 10s ago (within 30s cooldown)
+        LAST_CLEAR_TS=\$((now - 5))  # /clear sent 5s ago (within 10s cooldown)
         agent_is_busy
     "
     [ "$status" -eq 0 ]  # 0 = busy (cooldown overrides idle flag)

@@ -715,7 +715,7 @@ agent_is_busy() {
     # and cause race conditions (inbox1 arrives before /clear completes).
     local now_busy
     now_busy=$(date +%s)
-    if [ "${LAST_CLEAR_TS:-0}" -gt 0 ] && [ "$((now_busy - LAST_CLEAR_TS))" -lt 30 ]; then
+    if [ "${LAST_CLEAR_TS:-0}" -gt 0 ] && [ "$((now_busy - LAST_CLEAR_TS))" -lt 10 ]; then
         return 0  # busy — /clear still processing
     fi
 
@@ -1005,6 +1005,16 @@ for s in data.get('specials', []):
             echo "[$(date)] [AUTO-RECOVERY] queued task_assigned for $AGENT_ID ($recovery_id)" >&2
         fi
         info=$(get_unread_info)
+        # /clear完了後の専用nudge（busyガード10秒超過を保証するため8秒待機）
+        # total wait: send_cli_command内3秒 + sleep5(L999) + sleep8 = 16秒 > 10秒ガード
+        sleep 8
+        touch "${IDLE_FLAG_DIR:-/tmp}/shogun_idle_${AGENT_ID}"
+        local post_clear_count
+        post_clear_count=$(echo "$info" | "$SCRIPT_DIR/.venv/bin/python3" -c "import sys,json; print(json.load(sys.stdin).get('count',0))" 2>/dev/null)
+        if [ "${post_clear_count:-0}" -gt 0 ] 2>/dev/null; then
+            echo "[$(date)] [POST-CLEAR] Sending nudge to $AGENT_ID (${post_clear_count} unread)" >&2
+            send_wakeup "$post_clear_count"
+        fi
     fi
 
     # Send wake-up nudge for normal messages (with escalation)

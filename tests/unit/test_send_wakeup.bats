@@ -877,7 +877,7 @@ YAML
   ? for shortcuts                100% context left"
         source "'"$TEST_HARNESS"'"
         now=$(date +%s)
-        LAST_CLEAR_TS=$((now - 10))  # /clear sent 10 seconds ago (within 30s cooldown)
+        LAST_CLEAR_TS=$((now - 5))  # /clear sent 5 seconds ago (within 10s cooldown)
         agent_is_busy
     '
     [ "$status" -eq 0 ]
@@ -891,7 +891,7 @@ YAML
   ? for shortcuts                100% context left"
         source "'"$TEST_HARNESS"'"
         now=$(date +%s)
-        LAST_CLEAR_TS=$((now - 40))  # /clear sent 40 seconds ago (past 30s cooldown)
+        LAST_CLEAR_TS=$((now - 40))  # /clear sent 40 seconds ago (past 10s cooldown)
         agent_is_busy
     '
     [ "$status" -eq 1 ]
