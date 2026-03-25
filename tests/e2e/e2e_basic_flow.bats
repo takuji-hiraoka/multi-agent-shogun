@@ -68,13 +68,13 @@ setup() {
     assert_success
 
     # 5. Verify report was written
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" 10
     assert_success
 
     # 6. Verify report content
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "status" "done"
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "worker_id" "ashigaru1"
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "task_id" "subtask_test_001a"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "status" "done"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "worker_id" "ashigaru1"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "task_id" "subtask_test_001a"
 
     # 7. Verify inbox was processed (all read)
     run assert_inbox_unread_count "$E2E_QUEUE/queue/inbox/ashigaru1.yaml" 0
@@ -143,11 +143,11 @@ setup() {
     assert_success
 
     # 6. Verify report exists
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" 10
     assert_success
 
     # 7. Verify report fields
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "status" "done"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "status" "done"
 
     # 8. Verify karo received report notification
     sleep 2

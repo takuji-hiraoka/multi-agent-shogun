@@ -93,9 +93,9 @@ os.replace(tmp_path, '$E2E_QUEUE/queue/tasks/ashigaru2.yaml')
     assert_success
 
     # 9. Both reports should exist
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" 10
     assert_success
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru2_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_002b_report.yaml" 10
     assert_success
 }
 
@@ -123,5 +123,5 @@ os.replace(tmp_path, '$E2E_QUEUE/queue/tasks/ashigaru2.yaml')
     assert_yaml_field "$E2E_QUEUE/queue/tasks/ashigaru2.yaml" "task.status" "blocked"
 
     # 5. No report should be created
-    [ ! -f "$E2E_QUEUE/queue/reports/ashigaru2_report.yaml" ]
+    [ ! -f "$E2E_QUEUE/queue/reports/subtask_test_002b_report.yaml" ]
 }

@@ -3,7 +3,8 @@
 # E2E-011: slim_reports retention behavior
 # ═══════════════════════════════════════════════════════════════
 # Verifies slim_yaml.py keeps unprocessed reports for active cmds,
-# archives old reports for done cmds, and preserves canonical reports.
+# archives old reports for done cmds.
+# Reports are task-unit files ({task_id}_report.yaml) — no canonical names.
 # ═══════════════════════════════════════════════════════════════
 
 # bats file_tags=e2e
@@ -75,70 +76,62 @@ seed_yaml() {
     printf '%s\n' "$value" > "$file"
 }
 
-@test "E2E-011-A: unprocessed report with active cmd is kept" {
+@test "E2E-011-A: task-unit report with active cmd is kept" {
     local root
     root="$(mktemp -d "/tmp/e2e_slim_retention_XXXXXX")"
     build_tmp_project "$root"
     cp "$PROJECT_ROOT/scripts/slim_yaml.py" "$root/scripts/"
 
     seed_yaml "$root/queue/shogun_to_karo.yaml" $'commands:\n  - id: cmd_test\n    status: pending\n'
-    seed_yaml "$root/queue/reports/ashigaru1_cmd_test_report.yaml" $'parent_cmd: cmd_test\nstatus: done\n'
-    seed_yaml "$root/queue/reports/ashigaru1_report.yaml" $'parent_cmd: cmd_ignored\nstatus: done\n'
+    seed_yaml "$root/queue/reports/subtask_test_001a_report.yaml" $'parent_cmd: cmd_test\nstatus: done\n'
 
-    touch -d "2 days ago" "$root/queue/reports/ashigaru1_cmd_test_report.yaml"
-    touch -d "2 days ago" "$root/queue/reports/ashigaru1_report.yaml"
+    touch -d "2 days ago" "$root/queue/reports/subtask_test_001a_report.yaml"
 
     run run_slim_yaml "$root" karo
     assert_success
 
     # Active parent_cmd means this report is kept.
-    [ -f "$root/queue/reports/ashigaru1_cmd_test_report.yaml" ]
-    # Canonical report is always preserved.
-    [ -f "$root/queue/reports/ashigaru1_report.yaml" ]
+    [ -f "$root/queue/reports/subtask_test_001a_report.yaml" ]
 
     rm -rf "$root"
 }
 
-@test "E2E-011-B: old report for done cmd is archived" {
+@test "E2E-011-B: task-unit report for done cmd is archived" {
     local root
     root="$(mktemp -d "/tmp/e2e_slim_retention_XXXXXX")"
     build_tmp_project "$root"
     cp "$PROJECT_ROOT/scripts/slim_yaml.py" "$root/scripts/"
 
     seed_yaml "$root/queue/shogun_to_karo.yaml" $'commands:\n  - id: cmd_test\n    status: done\n'
-    seed_yaml "$root/queue/reports/ashigaru1_cmd_test_report.yaml" $'parent_cmd: cmd_test\nstatus: done\n'
-    seed_yaml "$root/queue/reports/ashigaru1_report.yaml" $'parent_cmd: cmd_ignored\nstatus: done\n'
+    seed_yaml "$root/queue/reports/subtask_test_001a_report.yaml" $'parent_cmd: cmd_test\nstatus: done\n'
 
-    touch -d "2 days ago" "$root/queue/reports/ashigaru1_cmd_test_report.yaml"
-    touch -d "2 days ago" "$root/queue/reports/ashigaru1_report.yaml"
+    touch -d "2 days ago" "$root/queue/reports/subtask_test_001a_report.yaml"
 
     run run_slim_yaml "$root" karo
     assert_success
 
-    # Non-canonical report is archived.
-    [ ! -f "$root/queue/reports/ashigaru1_cmd_test_report.yaml" ]
-    [ -f "$root/queue/archive/reports/ashigaru1_cmd_test_report.yaml" ]
-    # Canonical report remains.
-    [ -f "$root/queue/reports/ashigaru1_report.yaml" ]
+    # Done cmd + stale → archived.
+    [ ! -f "$root/queue/reports/subtask_test_001a_report.yaml" ]
+    [ -f "$root/queue/archive/reports/subtask_test_001a_report.yaml" ]
 
     rm -rf "$root"
 }
 
-@test "E2E-011-C: canonical report remains even if old and complete" {
+@test "E2E-011-C: recent task-unit report is kept even if cmd is done" {
     local root
     root="$(mktemp -d "/tmp/e2e_slim_retention_XXXXXX")"
     build_tmp_project "$root"
     cp "$PROJECT_ROOT/scripts/slim_yaml.py" "$root/scripts/"
 
     seed_yaml "$root/queue/shogun_to_karo.yaml" $'commands:\n  - id: cmd_test\n    status: done\n'
-    seed_yaml "$root/queue/reports/ashigaru1_report.yaml" $'parent_cmd: cmd_done\nstatus: done\n'
-    touch -d "2 days ago" "$root/queue/reports/ashigaru1_report.yaml"
+    seed_yaml "$root/queue/reports/subtask_test_001a_report.yaml" $'parent_cmd: cmd_test\nstatus: done\n'
+    # NOT touching timestamp — report is recent (not stale)
 
     run run_slim_yaml "$root" karo
     assert_success
 
-    # Canonical report is always retained.
-    [ -f "$root/queue/reports/ashigaru1_report.yaml" ]
+    # Not stale → kept regardless of cmd status.
+    [ -f "$root/queue/reports/subtask_test_001a_report.yaml" ]
 
     rm -rf "$root"
 }

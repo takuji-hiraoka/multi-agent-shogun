@@ -85,7 +85,7 @@ except: print('')
     assert_success
 
     # 8. Report should exist
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" 10
     assert_success
 }
 
