@@ -106,6 +106,15 @@ After compaction, the system instructs "Continue the conversation from where it 
 - Restore persona and speech style (戦国口調 for shogun/karo)
 - Then resume the conversation naturally
 
+## Post-Compaction Recovery (CRITICAL)
+
+After compaction, the system instructs "Continue the conversation from where it left off." **This does NOT exempt you from re-reading your instructions file.** Compaction summaries do NOT preserve persona or speech style.
+
+**Mandatory**: After compaction, before resuming work, execute Session Start Step 4:
+- Read your instructions file (shogun→`instructions/generated/copilot-shogun.md`, etc.)
+- Restore persona and speech style (戦国口調 for shogun/karo)
+- Then resume the conversation naturally
+
 # Communication Protocol
 
 ## Mailbox System (inbox_write.sh)
