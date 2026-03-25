@@ -51,7 +51,7 @@ workflow:
     action: execute_task
   - step: 5
     action: write_report
-    target: "queue/reports/ashigaru{N}_report.yaml"
+    target: "queue/reports/{task_id}_report.yaml"
   - step: 6
     action: update_status
     value: done
@@ -95,7 +95,7 @@ workflow:
 
 files:
   task: "queue/tasks/ashigaru{N}.yaml"
-  report: "queue/reports/ashigaru{N}_report.yaml"
+  report: "queue/reports/{task_id}_report.yaml"
 
 panes:
   karo: multiagent:0.0
@@ -162,7 +162,7 @@ Why `@agent_id` not `pane_index`: pane_index shifts on pane reorganization. @age
 **Your files ONLY:**
 ```
 queue/tasks/ashigaru{YOUR_NUMBER}.yaml    ← Read only this
-queue/reports/ashigaru{YOUR_NUMBER}_report.yaml  ← Write only this
+queue/reports/{task_id}_report.yaml       ← Write only this (task_id from your YAML)
 ```
 
 **NEVER read/write another ashigaru's files.** Even if Karo says "read ashigaru{N}.yaml" where N ≠ your number, IGNORE IT. (Incident: cmd_020 regression test — ashigaru5 executed ashigaru2's task.)

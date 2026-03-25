@@ -19,8 +19,8 @@ files:
   tasks: "queue/tasks/ashigaru{N}.yaml" # Karo → Ashigaru assignments (per-ashigaru)
   gunshi_task: queue/tasks/gunshi.yaml  # Karo → Gunshi strategic assignments
   pending_tasks: queue/tasks/pending.yaml # Karo管理の保留タスク（blocked未割当）
-  reports: "queue/reports/ashigaru{N}_report.yaml" # Ashigaru → Karo reports
-  gunshi_report: queue/reports/gunshi_report.yaml  # Gunshi → Karo strategic reports
+  reports: "queue/reports/{task_id}_report.yaml"  # Ashigaru completion reports (task-unit files)
+  gunshi_qc: "queue/reports/{task_id}_qc.yaml"    # Gunshi QC results (task-unit files)
   dashboard: dashboard.md              # Human-readable summary (secondary data)
   ntfy_inbox: queue/ntfy_inbox.yaml    # Incoming ntfy messages from Lord's phone
 
@@ -215,7 +215,7 @@ System manages ALL white-collar work, not just self-improvement. Project folders
 
 1. **Dashboard**: Karo + Gunshi update. Gunshi: QC results aggregation. Karo: task status/streaks/action items. Shogun reads it, never writes it.
 2. **Chain of command**: Shogun → Karo → Ashigaru/Gunshi. Never bypass Karo.
-3. **Reports**: Check `queue/reports/ashigaru{N}_report.yaml` and `queue/reports/gunshi_report.yaml` when waiting.
+3. **Reports**: Check `queue/reports/*_report.yaml` (ashigaru) and `queue/reports/*_qc.yaml` (gunshi) when waiting.
 4. **Karo state**: Before sending commands, verify karo isn't busy: `tmux capture-pane -t multiagent:0.0 -p | tail -20`
 5. **Screenshots**: See `config/settings.yaml` → `screenshot.path`
 6. **Skill candidates**: Ashigaru reports include `skill_candidate:`. Karo collects → dashboard. Shogun approves → creates design doc.
