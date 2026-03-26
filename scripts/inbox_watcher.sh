@@ -139,7 +139,7 @@ STARTUP_PROMPT_SENT=${STARTUP_PROMPT_SENT:-0}
 # ─── Task stall detection (cmd_011 S1) ───
 # Detects when all inbox messages are read but assigned task hasn't been started.
 TASK_STALL_FIRST_SEEN=${TASK_STALL_FIRST_SEEN:-0}
-TASK_STALL_THRESHOLD=${TASK_STALL_THRESHOLD:-600}
+TASK_STALL_THRESHOLD=${TASK_STALL_THRESHOLD:-180}
 
 # ─── Phase feature flags (cmd_107 Phase 1/2/3) ───
 # ASW_PHASE:
