@@ -81,6 +81,7 @@ Lightweight recovery using only CLAUDE.md (auto-loaded). Do NOT read instruction
 Step 1: tmux display-message -t "$TMUX_PANE" -p '#{@agent_id}' → ashigaru{N} or gunshi
 Step 2: (gunshi only) mcp__memory__read_graph (skip on failure). Ashigaru skip — task YAML is sufficient.
 Step 3: Read queue/tasks/{your_id}.yaml → assigned=work, idle=wait
+Step 3.5: If assigned → Edit queue/tasks/{your_id}.yaml: status → in_progress
 Step 4: If task has "project:" field → read context/{project}.md
         If task has "target_path:" → read that file
 Step 5: Start work
