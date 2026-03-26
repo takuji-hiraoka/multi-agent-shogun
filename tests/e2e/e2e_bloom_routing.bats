@@ -1,4 +1,5 @@
 #!/usr/bin/env bats
+# bats file_tags=e2e,vps
 # e2e_bloom_routing.bats — Dim C: スマート切り替えE2Eテスト
 # Issue #53 Phase 2 — find_agent_for_model() + karo bloom routing 統合検証
 #
@@ -17,6 +18,17 @@
 PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
 
 setup() {
+    # VPS混合CLI環境の確認（bloom_routing設定が必要）
+    if ! python3 -c "
+import yaml, sys
+d = yaml.safe_load(open('${PROJECT_ROOT}/config/settings.yaml'))
+br = d.get('bloom_routing')
+if not br or br == 'off':
+    sys.exit(1)
+" 2>/dev/null; then
+        skip "bloom_routing設定なし。VPS上で混合CLI設定後に実行せよ。"
+    fi
+
     # tmuxセッションの存在確認
     if ! tmux has-session -t multiagent 2>/dev/null; then
         skip "tmux session 'multiagent' が存在しない。VPS上でshutsuijin後に実行せよ。"
