@@ -207,7 +207,9 @@ karo_decompose_cmd() {
 
     # Create subtask for ashigaru1
     local subtask_file="$MOCK_PROJECT_ROOT/queue/tasks/ashigaru1.yaml"
-    local subtask_id="subtask_${cmd_id}_a"
+    # cmd_test_001 → subtask_test_001a (strip "cmd_" prefix, append "a")
+    local base_id="${cmd_id#cmd_}"
+    local subtask_id="subtask_${base_id}a"
     cat > "$subtask_file" <<EOF
 task:
   task_id: "$subtask_id"

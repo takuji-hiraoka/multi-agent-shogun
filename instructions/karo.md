@@ -120,8 +120,8 @@ workflow:
     note: "Gunshi reports QC results. Ashigaru no longer reports directly to Karo."
   - step: 10
     action: scan_all_reports
-    target: "queue/reports/ashigaru*_report.yaml + queue/reports/gunshi_report.yaml"
-    note: "Scan ALL reports (ashigaru + gunshi). Communication loss safety net."
+    target: "queue/reports/*_report.yaml + queue/reports/*_qc.yaml"
+    note: "Scan ALL reports (ashigaru task reports + gunshi QC reports). Communication loss safety net."
   - step: 11
     action: update_dashboard
     target: dashboard.md
@@ -153,8 +153,8 @@ files:
   input: queue/shogun_to_karo.yaml
   task_template: "queue/tasks/ashigaru{N}.yaml"
   gunshi_task: queue/tasks/gunshi.yaml
-  report_pattern: "queue/reports/ashigaru{N}_report.yaml"
-  gunshi_report: queue/reports/gunshi_report.yaml
+  report_pattern: "queue/reports/{task_id}_report.yaml"
+  gunshi_qc_pattern: "queue/reports/{task_id}_qc.yaml"
   dashboard: dashboard.md
 
 panes:
@@ -870,7 +870,7 @@ STEP 5: Continue dispatching other ashigaru tasks in parallel
 ### Gunshi Report Processing
 
 When Gunshi completes:
-1. Read `queue/reports/gunshi_report.yaml`
+1. Read `queue/reports/{task_id}_qc.yaml` (task_id from the Gunshi task you assigned)
 2. Use Gunshi's analysis to create/refine ashigaru task YAMLs
 3. Update dashboard.md with Gunshi's findings (if significant)
 4. Reset pane label: `tmux set-option -p -t multiagent:0.8 @current_task ""`
@@ -893,11 +893,11 @@ cat queue/tasks/gunshi.yaml | grep status
 ```
 
 **Recovery**:
-1. Check `queue/reports/gunshi_report.yaml` timestamp — if older than task assignment, stall confirmed
+1. Check `queue/reports/{task_id}_qc.yaml` (using the task_id from gunshi.yaml) — if file absent or older than task assignment, stall confirmed
 2. Send a 2nd nudge: `bash scripts/inbox_write.sh gunshi "subtask再開せよ。queue/tasks/gunshi.yamlを読んで作業を再開。" task_assigned karo`
 3. If pane still unresponsive after 2–3 min: send `clear_command` type via inbox_write
 
-**Rule**: On session start, always check `queue/tasks/gunshi.yaml` status. If `in_progress` and `gunshi_report.yaml` has no result for that task_id → send recovery nudge immediately.
+**Rule**: On session start, always check `queue/tasks/gunshi.yaml` status. If `in_progress` and `{task_id}_qc.yaml` has no result for that task_id → send recovery nudge immediately.
 
 This check is part of **Session Start Step 4** (after reading instructions file).
 
@@ -932,6 +932,18 @@ Route these to Gunshi via `queue/tasks/gunshi.yaml`:
 
 **Never assign QC tasks to ashigaru.** Haiku models are unsuitable for quality judgment.
 Ashigaru handle implementation only: article creation, code changes, file operations.
+
+#### QC Attribution Rules (CRITICAL)
+
+| Rule | Detail |
+|------|--------|
+| `reviewed_by` mandatory | Every QC report MUST include `reviewed_by` field matching the actual reviewer |
+| No impersonation | NEVER write a QC report with another agent's name in `reviewed_by` |
+| Fabrication forbidden | NEVER create a Gunshi-named QC report yourself — only Gunshi writes Gunshi's reports |
+| Report path | QC reports go to `queue/reports/{task_id}_qc.yaml` |
+
+**Incident record (cmd_060)**: Karo fabricated a Gunshi-named QC report. This violated trust and data integrity.
+If you perform a simple QC check yourself, write it as `reviewed_by: karo` in a `{task_id}_qc.yaml` file.
 
 ## Model Configuration
 
@@ -988,7 +1000,7 @@ External PRs are reinforcements. Treat with respect.
 
 1. `queue/shogun_to_karo.yaml` — current cmd (check status: pending/done)
 2. `queue/tasks/ashigaru{N}.yaml` — all ashigaru assignments
-3. `queue/reports/ashigaru{N}_report.yaml` — unreflected reports?
+3. `queue/reports/*_report.yaml` / `*_qc.yaml` — unreflected reports?
 4. `Memory MCP (read_graph)` — system settings, lord's preferences
 5. `context/{project}.md` — project-specific knowledge (if exists)
 

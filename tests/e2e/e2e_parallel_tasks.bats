@@ -73,14 +73,14 @@ setup() {
     assert_success
 
     # 5. Both reports should exist
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" 10
     assert_success
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru2_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_002a_report.yaml" 10
     assert_success
 
     # 6. Reports should have correct agent IDs
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "worker_id" "ashigaru1"
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru2_report.yaml" "worker_id" "ashigaru2"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "worker_id" "ashigaru1"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_002a_report.yaml" "worker_id" "ashigaru2"
 }
 
 # ═══════════════════════════════════════════════════════════════

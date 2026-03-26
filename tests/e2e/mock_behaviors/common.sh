@@ -116,7 +116,7 @@ write_mock_report() {
     local task_id="$2"
     local parent_cmd="$3"
     local project_root="$4"
-    local report_file="$project_root/queue/reports/${agent_id}_report.yaml"
+    local report_file="$project_root/queue/reports/${task_id}_report.yaml"
     local timestamp
     timestamp=$(date "+%Y-%m-%dT%H:%M:%S")
 

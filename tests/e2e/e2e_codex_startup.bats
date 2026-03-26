@@ -90,12 +90,12 @@ dump_watcher_log() {
     assert_success
 
     # 6. Verify report was written
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" 10
     assert_success
 
     # 7. Verify report content
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "status" "done"
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "task_id" "subtask_test_001a"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "status" "done"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "task_id" "subtask_test_001a"
 
     # 8. Verify startup prompt appeared in pane output (scrollback search)
     run wait_for_pane_text "$ashigaru1_pane" "Startup prompt received" 10

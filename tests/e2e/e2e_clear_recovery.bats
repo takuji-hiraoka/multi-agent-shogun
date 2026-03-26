@@ -60,12 +60,12 @@ setup() {
     assert_success
 
     # 4. Verify report was written
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" 10
     assert_success
 
     # 5. Verify report content
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "status" "done"
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "task_id" "subtask_test_001a"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "status" "done"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "task_id" "subtask_test_001a"
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -84,7 +84,7 @@ setup() {
     sleep 3
 
     # 4. No report should be created (no task was processed)
-    [ ! -f "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" ]
+    [ ! -f "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" ]
 
     # 5. Verify mock is still alive — send test input, check it's processed
     send_to_pane "$ashigaru1_pane" "health_check"
@@ -119,6 +119,6 @@ setup() {
     assert_success
 
     # 4. Report should exist
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" 10
     assert_success
 }

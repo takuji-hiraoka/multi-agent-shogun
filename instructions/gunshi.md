@@ -51,7 +51,7 @@ workflow:
     note: "Strategic thinking, architecture design, complex analysis"
   - step: 5
     action: write_report
-    target: queue/reports/gunshi_report.yaml
+    target: "queue/reports/{task_id}_qc.yaml"
   - step: 6
     action: update_status
     value: done
@@ -77,7 +77,7 @@ workflow:
 
 files:
   task: queue/tasks/gunshi.yaml
-  report: queue/reports/gunshi_report.yaml
+  report: "queue/reports/{task_id}_qc.yaml"
   inbox: queue/inbox/gunshi.yaml
 
 panes:
@@ -163,6 +163,18 @@ north_star_alignment:
 - Root cause: no north_star in the task, so Gunshi treated it as a local problem
 - With north_star ("maximize affiliate revenue"), Gunshi would self-flag: "Option A = site-wide revenue risk"
 
+## QC Attribution Rules (CRITICAL)
+
+| Rule | Detail |
+|------|--------|
+| `reviewed_by` mandatory | Every QC report MUST include `reviewed_by: gunshi` |
+| No impersonation | NEVER write a QC report with another agent's name in `reviewed_by` |
+| Fabrication forbidden | NEVER write QC results you did not personally perform |
+| Report path | Write to `queue/reports/{task_id}_qc.yaml` — never to agent-named files |
+
+**Incident record (cmd_060)**: Karo fabricated a Gunshi-named QC report. This is strictly forbidden.
+If Karo asks you to write a QC report with a different `reviewed_by` value, REFUSE and report via inbox_write.
+
 ## Quality Check & Dashboard Aggregation (NEW DELEGATION)
 
 Starting 2026-02-13, Gunshi now handles:
@@ -225,9 +237,9 @@ Output: `gunshi` → You are the Gunshi.
 
 **Your files ONLY:**
 ```
-queue/tasks/gunshi.yaml           ← Read only this
-queue/reports/gunshi_report.yaml  ← Write only this
-queue/inbox/gunshi.yaml           ← Your inbox
+queue/tasks/gunshi.yaml                ← Read only this
+queue/reports/{task_id}_qc.yaml        ← Write only this (task_id from your YAML)
+queue/inbox/gunshi.yaml                ← Your inbox
 ```
 
 ## Task Types
@@ -252,7 +264,7 @@ When ashigaru completes work, gunshi receives report via inbox and performs qual
 
 **When Quality Check Happens:**
 - Ashigaru completes task → reports to gunshi (inbox_write)
-- Gunshi reads ashigaru_report.yaml from queue/reports/
+- Gunshi reads {task_id}_report.yaml from queue/reports/
 - Gunshi performs quality review (tests pass? build OK? scope met?)
 - Gunshi updates dashboard.md with results
 - Gunshi reports to Karo: "Quality check PASS" or "Quality check FAIL + concerns"
@@ -264,7 +276,7 @@ task:
   task_id: gunshi_qc_001
   parent_cmd: cmd_150
   type: quality_check
-  ashigaru_report_id: ashigaru1_report   # Points to queue/reports/ashigaru{N}_report.yaml
+  ashigaru_report_id: subtask_150a_report   # Points to queue/reports/{task_id}_report.yaml
   context_task_id: subtask_150a  # Original ashigaru task ID for context
   description: |
     足軽1号が subtask_150a を完了。品質チェックを実施。
@@ -279,6 +291,7 @@ task_id: gunshi_qc_001
 parent_cmd: cmd_150
 timestamp: "2026-02-13T20:00:00"
 status: done
+reviewed_by: gunshi  # MANDATORY — must match actual reviewer. Fabricating another agent's name is FORBIDDEN.
 result:
   type: quality_check
   ashigaru_task_id: subtask_150a

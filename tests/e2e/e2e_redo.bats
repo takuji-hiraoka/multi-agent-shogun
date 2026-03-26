@@ -66,9 +66,9 @@ setup() {
     assert_success
 
     # 3. Verify initial report
-    run wait_for_file "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" 10
+    run wait_for_file "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" 10
     assert_success
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "task_id" "subtask_test_001a"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "task_id" "subtask_test_001a"
 
     # ─── Phase 2: Redo ───
 
@@ -92,9 +92,9 @@ EOF
     run wait_for_yaml_value "$E2E_QUEUE/queue/tasks/ashigaru1.yaml" "task.status" "done" 30
     assert_success
 
-    # 7. Verify new report has new task_id
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "task_id" "subtask_test_001a2"
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "status" "done"
+    # 7. Verify new report has new task_id (separate file for redo task)
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a2_report.yaml" "task_id" "subtask_test_001a2"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a2_report.yaml" "status" "done"
 
     # 8. Verify redo_of field is preserved in task YAML
     assert_yaml_field "$E2E_QUEUE/queue/tasks/ashigaru1.yaml" "task.redo_of" "subtask_test_001a"
@@ -120,7 +120,7 @@ EOF
     assert_success
 
     # 2. Save initial report task_id
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "task_id" "subtask_test_001a"
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a_report.yaml" "task_id" "subtask_test_001a"
 
     # 3. Write redo task YAML
     cat > "$E2E_QUEUE/queue/tasks/ashigaru1.yaml" <<'EOF'
@@ -142,8 +142,8 @@ EOF
     run wait_for_yaml_value "$E2E_QUEUE/queue/tasks/ashigaru1.yaml" "task.status" "done" 30
     assert_success
 
-    # 6. Report now has the NEW task_id (overwritten)
-    assert_yaml_field "$E2E_QUEUE/queue/reports/ashigaru1_report.yaml" "task_id" "subtask_test_001a2"
+    # 6. Redo report has new task_id in its own file (task-unit file design)
+    assert_yaml_field "$E2E_QUEUE/queue/reports/subtask_test_001a2_report.yaml" "task_id" "subtask_test_001a2"
 
     # 7. redo_of field preserved in task YAML
     assert_yaml_field "$E2E_QUEUE/queue/tasks/ashigaru1.yaml" "task.redo_of" "subtask_test_001a"

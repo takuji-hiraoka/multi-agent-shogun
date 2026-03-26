@@ -24,9 +24,9 @@ if [ ! -d "$REPO_ROOT/tests/test_helper/bats-support" ]; then
 fi
 
 # ──────────────────────────────────────────────
-# 2. 全テスト実行（TAP出力でSKIPも同時チェック）
+# 2. ユニットテスト実行（TAP出力でSKIPも同時チェック）
 # ──────────────────────────────────────────────
-# 対象ファイル収集（agent_selfwatch除く）
+# 対象ファイル収集（agent_selfwatch除く、e2e除く）
 ALL_TESTS=()
 for f in "$REPO_ROOT/tests/"*.bats; do
   [[ "$f" == *agent_selfwatch.bats ]] && continue
@@ -44,10 +44,10 @@ fi
 if [ ${#ALL_TESTS[@]} -eq 0 ]; then
   echo "ℹ️  実行対象テストなし。スキップします。"
 else
-  echo "🧪 pre-commit: テスト実行中（ルート + unit）..."
+  echo "🧪 pre-commit: ユニットテスト実行中..."
   TAP_OUTPUT=$(bats "${ALL_TESTS[@]}" --tap 2>&1) || {
     echo "$TAP_OUTPUT"
-    echo "❌ テスト失敗"
+    echo "❌ ユニットテスト失敗"
     FAIL=1
   }
   if [ "$FAIL" -eq 0 ]; then
@@ -56,16 +56,59 @@ else
     # SKIP=FAIL ポリシーチェック（同一TAP出力から）
     SKIP_COUNT=$(echo "$TAP_OUTPUT" | grep -c "^ok.*# skip" || true)
     if [ "$SKIP_COUNT" -gt 0 ]; then
-      echo "❌ SKIP=FAIL: ${SKIP_COUNT}件のテストがスキップされています"
+      echo "❌ SKIP=FAIL: ${SKIP_COUNT}件のユニットテストがスキップされています"
       FAIL=1
     else
-      echo "✅ SKIP=FAIL: 全テスト実行済み（SKIPなし）"
+      echo "✅ SKIP=FAIL: 全ユニットテスト実行済み（SKIPなし）"
     fi
   fi
 fi
 
 # ──────────────────────────────────────────────
-# 3. ShellCheck（lib/, scripts/）
+# 3. E2Eテスト実行（RUN_E2E=1 のときのみ）
+# ──────────────────────────────────────────────
+E2E_DIR="$REPO_ROOT/tests/e2e"
+if [ "${RUN_E2E:-0}" != "1" ]; then
+  echo "ℹ️  E2Eテスト: スキップ（RUN_E2E=1 で有効化）"
+elif [ -d "$E2E_DIR" ]; then
+  # VPS専用テスト（vpsタグ付き）を除外して収集
+  E2E_TESTS=()
+  for f in "$E2E_DIR"/*.bats; do
+    [ -f "$f" ] || continue
+    # file_tags に vps を含むファイルを除外
+    if grep -q "^# bats file_tags=.*vps" "$f"; then
+      continue
+    fi
+    E2E_TESTS+=("$f")
+  done
+
+  if [ ${#E2E_TESTS[@]} -eq 0 ]; then
+    echo "ℹ️  E2Eテスト対象なし。スキップします。"
+  else
+    echo "🧪 pre-commit: E2Eテスト実行中（${#E2E_TESTS[@]}ファイル、VPS専用除外）..."
+    E2E_OUTPUT=$(bats "${E2E_TESTS[@]}" --tap --jobs 1 2>&1) || {
+      echo "$E2E_OUTPUT"
+      echo "❌ E2Eテスト失敗"
+      FAIL=1
+    }
+    if [ "$FAIL" -eq 0 ]; then
+      echo "$E2E_OUTPUT" | grep -v "^#" | tail -5
+
+      E2E_SKIP_COUNT=$(echo "$E2E_OUTPUT" | grep -c "^ok.*# skip" || true)
+      if [ "$E2E_SKIP_COUNT" -gt 0 ]; then
+        echo "❌ SKIP=FAIL: ${E2E_SKIP_COUNT}件のE2Eテストがスキップされています"
+        FAIL=1
+      else
+        echo "✅ SKIP=FAIL: 全E2Eテスト実行済み（SKIPなし）"
+      fi
+    fi
+  fi
+else
+  echo "ℹ️  tests/e2e/ が見つかりません。スキップします。"
+fi
+
+# ──────────────────────────────────────────────
+# 4. ShellCheck（lib/, scripts/）
 # ──────────────────────────────────────────────
 echo "🔍 pre-commit: ShellCheck 実行中..."
 if ! command -v shellcheck &>/dev/null; then

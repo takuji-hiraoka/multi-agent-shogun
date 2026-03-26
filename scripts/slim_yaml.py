@@ -16,7 +16,7 @@ from pathlib import Path
 import yaml
 
 CANONICAL_TASKS = {f'ashigaru{i}' for i in range(1, 9)} | {'gunshi'}
-CANONICAL_REPORTS = {f'ashigaru{i}_report' for i in range(1, 9)} | {'gunshi_report'}
+CANONICAL_REPORTS: set = set()  # Reports are now task-unit files ({task_id}_report.yaml / {task_id}_qc.yaml). No permanent canonical names.
 IDLE_STUB = {'task': {'status': 'idle'}}
 
 
