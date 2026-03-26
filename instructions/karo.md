@@ -137,10 +137,16 @@ workflow:
   - step: 11.5
     action: unblock_dependent_tasks
     note: "Scan all task YAMLs for blocked_by containing completed task_id. Remove and unblock."
-  - step: 11.7
-    action: saytask_notify
-    note: "Update streaks.yaml and send ntfy notification. See SayTask section."
   - step: 12
+    action: saytask_notify
+    note: "Update streaks.yaml. See SayTask section."
+  - step: 13
+    action: ntfy_gate
+    note: |
+      【GATE】bash scripts/ntfy.sh でntfy送信する。送信完了するまでstep 14に進むな。
+      送信不要（サブタスク未完了、ntfy_topic未設定）→ スキップ可。
+      メッセージ形式は「ntfy Notification to Lord」セクション参照。
+  - step: 14
     action: check_pending_after_report
     note: |
       After report processing, check queue/shogun_to_karo.yaml for unprocessed pending cmds.
@@ -508,27 +514,27 @@ Push notifications to the lord's phone via ntfy. Karo manages streaks and notifi
 | **VF task complete** | **SayTask task completed** | `✅ VF-{id}完了 {title} 🔥ストリーク{N}日目` |
 | **VF Frog complete** | **VF task matching `today.frog` completed** | `🐸✅ Frog撃破！{title}` |
 
-### cmd Completion Check (Step 11.7)
+### cmd Completion Check (Step 12)
 
 1. Get `parent_cmd` of completed subtask
 2. Check all subtasks with same `parent_cmd`: `grep -l "parent_cmd: cmd_XXX" queue/tasks/ashigaru*.yaml | xargs grep "status:"`
-3. Not all done → skip notification
+3. Not all done → skip step 13 (ntfy_gate)
 4. All done → **purpose validation**: Re-read the original cmd in `queue/shogun_to_karo.yaml`. Compare the cmd's stated purpose against the combined deliverables. If purpose is not achieved (subtasks completed but goal unmet), do NOT mark cmd as done — instead create additional subtasks or report the gap to shogun via dashboard 🚨.
-5. **Purpose validated → update `queue/shogun_to_karo.yaml`**: Set `status: done` and add `completed_at: '<timestamp>'` for the cmd entry. **This step is MANDATORY and must not be skipped.**
+5. **Purpose validated → update `queue/shogun_to_karo.yaml`**: Set `status: done` and add `completed_at: '<timestamp>'` for the cmd entry.
 6. Update `saytask/streaks.yaml`:
    - `today.completed` += 1 (**per cmd**, not per subtask)
    - Streak logic: last_date=today → keep current; last_date=yesterday → current+1; else → reset to 1
    - Update `streak.longest` if current > longest
    - Check frog: if any completed task_id matches `today.frog` → 🐸 notification, reset frog
-7. Send ntfy notification
+7. → Step 13 (ntfy_gate) へ進む
 
 ### Karo Direct Work Completion (PR merge, direct tasks)
 
 When Karo directly completes a cmd (PR merge, direct implementation, analysis):
 1. Complete the work
-2. **Immediately update `queue/shogun_to_karo.yaml`**: Set `status: done` and `completed_at`. Do NOT defer this step.
+2. **Immediately update `queue/shogun_to_karo.yaml`**: Set `status: done` and `completed_at`.
 3. Update dashboard.md
-4. Send ntfy notification
+4. → Step 13 (ntfy_gate) へ進む
 
 ### Eat the Frog (today.frog)
 
@@ -580,21 +586,17 @@ today:
 
 #### When to Update
 
-- **cmd completion**: After all subtasks of a cmd are done (Step 11.7) → `today.completed` += 1
+- **cmd completion**: After all subtasks of a cmd are done (Step 12) → `today.completed` += 1
 - **VF task completion**: Shogun updates directly when lord completes VF task → `today.completed` += 1
 - **Frog completion**: Either cmd or VF → 🐸 notification, reset `today.frog` to `""`
 - **Daily reset**: At midnight, `today.*` resets. Streak logic runs on first completion of the day.
 
-### Action Needed Notification (Step 11)
+### Action Needed Notification (Step 13)
 
 When updating dashboard.md's 🚨 section:
 1. Count 🚨 section lines before update
 2. Count after update
-3. If increased → send ntfy: `🚨 要対応: {first new heading}`
-
-### ntfy Not Configured
-
-If `config/settings.yaml` has no `ntfy_topic` → skip all notifications silently.
+3. If increased → Step 13 (ntfy_gate) で `🚨 要対応: {first new heading}` を送信
 
 ## Dashboard: Sole Responsibility
 
@@ -671,26 +673,15 @@ When updating dashboard.md with Frog and streak info, use this expanded template
 
 ## ntfy Notification to Lord
 
-> **【CRITICAL: 絶対に忘れるな】コンパクション後・/clear後も必ず実行。スキップ＝殿への報告怠慢。**
+Step 13（ntfy_gate）で使用。`bash scripts/ntfy.sh "<message>"` で送信する。curl直接送信は禁止。
 
-**【必須】cmd完了時は必ず以下を実行すること。スキップ禁止。**
+| イベント | メッセージ |
+|---------|-----------|
+| cmd完了 | `bash scripts/ntfy.sh "✅ cmd_{id} 完了 — {summary}"` |
+| 失敗 | `bash scripts/ntfy.sh "❌ {subtask} 失敗 — {reason}"` |
+| 要対応 | `bash scripts/ntfy.sh "🚨 要対応 — {content}"` |
 
-dashboard.md更新後、ntfy通知を送信する:
-- cmd complete: `bash scripts/ntfy.sh "✅ cmd_{id} 完了 — {summary}"`
-- error/fail: `bash scripts/ntfy.sh "❌ {subtask} 失敗 — {reason}"`
-- action required: `bash scripts/ntfy.sh "🚨 要対応 — {content}"`
-
-**正しいスクリプトパス**: `scripts/ntfy.sh`（`ntfy_notify.sh` は誤り）
-
-**【禁止】curl直接送信禁止**: `curl -X POST https://ntfy.sh/<topic>` でトピックをハードコードする方法は禁止。
-必ず `bash scripts/ntfy.sh` を使うこと。理由: トピックは `config/settings.yaml` の `ntfy_topic` で管理されており、直接curlではトピック誤送信が起きる（2026-03-23 cmd_037インシデント）。
-
-**チェックリスト（step 11.7の後に確認）:**
-- [ ] `bash scripts/ntfy.sh` を実行したか？
-- [ ] `config/settings.yaml` に `ntfy_topic` が設定されているか？（未設定ならスキップ可）
-
-Note: This replaces the need for inbox_write to shogun. ntfy goes directly to Lord's phone.
-Karo sends ntfy directly — shogun is for human-to-AI interaction only, not for notification relay.
+`config/settings.yaml` に `ntfy_topic` 未設定 → スキップ。
 
 ## Skill Candidates
 

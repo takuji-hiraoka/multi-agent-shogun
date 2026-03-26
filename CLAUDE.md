@@ -28,7 +28,7 @@ cmd_format:
   required_fields: [id, timestamp, purpose, acceptance_criteria, command, project, priority, status]
   purpose: "One sentence — what 'done' looks like. Verifiable."
   acceptance_criteria: "List of testable conditions. ALL must be true for cmd=done."
-  validation: "Karo checks acceptance_criteria at Step 11.7. Ashigaru checks parent_cmd purpose on task completion."
+  validation: "Karo checks acceptance_criteria at Step 12. Ashigaru checks parent_cmd purpose on task completion."
 
 task_status_transitions:
   - "idle → assigned (karo assigns)"
