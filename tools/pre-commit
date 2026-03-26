@@ -65,10 +65,12 @@ else
 fi
 
 # ──────────────────────────────────────────────
-# 3. E2Eテスト実行
+# 3. E2Eテスト実行（RUN_E2E=1 のときのみ）
 # ──────────────────────────────────────────────
 E2E_DIR="$REPO_ROOT/tests/e2e"
-if [ -d "$E2E_DIR" ]; then
+if [ "${RUN_E2E:-0}" != "1" ]; then
+  echo "ℹ️  E2Eテスト: スキップ（RUN_E2E=1 で有効化）"
+elif [ -d "$E2E_DIR" ]; then
   # VPS専用テスト（vpsタグ付き）を除外して収集
   E2E_TESTS=()
   for f in "$E2E_DIR"/*.bats; do
