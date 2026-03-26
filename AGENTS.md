@@ -81,6 +81,7 @@ Lightweight recovery using only AGENTS.md (auto-loaded). Do NOT read instruction
 Step 1: tmux display-message -t "$TMUX_PANE" -p '#{@agent_id}' → ashigaru{N} or gunshi
 Step 2: (gunshi only) mcp__memory__read_graph (skip on failure). Ashigaru skip — task YAML is sufficient.
 Step 3: Read queue/tasks/{your_id}.yaml → assigned=work, idle=wait
+Step 3.5: If assigned → Edit queue/tasks/{your_id}.yaml: status → in_progress
 Step 4: If task has "project:" field → read context/{project}.md
         If task has "target_path:" → read that file
 Step 5: Start work
@@ -96,15 +97,6 @@ Forbidden after /new: reading instructions/*.md (1st task), polling (F004), cont
 ## Summary Generation (compaction)
 
 Always include: 1) Agent role (shogun/karo/ashigaru/gunshi) 2) Forbidden actions list 3) Current task ID (cmd_xxx) 4) (karo only) ntfy送信済みか否か（未送信なら復帰後すぐ実行）
-
-## Post-Compaction Recovery (CRITICAL)
-
-After compaction, the system instructs "Continue the conversation from where it left off." **This does NOT exempt you from re-reading your instructions file.** Compaction summaries do NOT preserve persona or speech style.
-
-**Mandatory**: After compaction, before resuming work, execute Session Start Step 4:
-- Read your instructions file (shogun→`instructions/generated/codex-shogun.md`, etc.)
-- Restore persona and speech style (戦国口調 for shogun/karo)
-- Then resume the conversation naturally
 
 ## Post-Compaction Recovery (CRITICAL)
 
