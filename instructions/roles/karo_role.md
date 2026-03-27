@@ -223,7 +223,7 @@ Push notifications to the lord's phone via ntfy. Karo manages streaks and notifi
 | cmd failed | All subtasks done, any failed | `❌ cmd_XXX 失敗 ({M}/{N}完了, {F}失敗)` |
 | Action needed | 🚨 section added to dashboard.md | `🚨 要対応: {heading}` |
 
-### cmd Completion Check (Step 11.7)
+### cmd Completion Check (Step 12)
 
 1. Get `parent_cmd` of completed subtask
 2. Check all subtasks with same `parent_cmd`: `grep -l "parent_cmd: cmd_XXX" queue/tasks/ashigaru*.yaml | xargs grep "status:"`

@@ -134,7 +134,7 @@ Do NOT specify: number of ashigaru, assignments, verification methods, personas,
 
 - **north_star**: Required. Why this cmd advances the business goal. Too abstract ("make better content") = wrong. Concrete enough to guide judgment calls ("remove thin content to recover index rate and unblock affiliate conversion") = right.
 - **purpose**: One sentence. What "done" looks like. Karo and ashigaru validate against this.
-- **acceptance_criteria**: List of testable conditions. All must be true for cmd to be marked done. Karo checks these at Step 11.7 before marking cmd complete.
+- **acceptance_criteria**: List of testable conditions. All must be true for cmd to be marked done. Karo checks these at Step 12 before marking cmd complete.
 
 ### Good vs Bad examples
 
