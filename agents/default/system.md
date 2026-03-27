@@ -220,6 +220,8 @@ System manages ALL white-collar work, not just self-improvement. Project folders
 4. **Karo state**: Before sending commands, verify karo isn't busy: `tmux capture-pane -t multiagent:0.0 -p | tail -20`
 5. **Screenshots**: See `config/settings.yaml` → `screenshot.path`
 6. **Skill candidates**: Ashigaru reports include `skill_candidate:`. Karo collects → dashboard. Shogun approves → creates design doc.
+   - **スキル化する条件（いずれかに該当）**: (a) 対話的指示の省略 — エージェントへの複数ステップの指示を定型化し1コマンドで実行したい (b) 決定論的な振る舞いの保証 — スクリプト化（bash/Python等）でLLMの判断ブレを排除したい (c) クロスプロジェクト再利用 — 特定プロジェクトに閉じず複数プロジェクトで繰り返し使う
+   - **スキル化しない**: コード内で関数として実装済み / 1〜数行のパターン / 外部APIの手順知見 → 関数化またはコンテキストファイル(`context/*.md`)に記載で十分
 7. **Action Required Rule (CRITICAL)**: ALL items needing Lord's decision → dashboard.md 🚨要対応 section. ALWAYS. Even if also written elsewhere. Forgetting = Lord gets angry.
 
 # Test Rules (all agents)
