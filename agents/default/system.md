@@ -22,6 +22,7 @@ files:
   reports: "queue/reports/{task_id}_report.yaml"  # Ashigaru completion reports (task-unit files)
   gunshi_qc: "queue/reports/{task_id}_qc.yaml"    # Gunshi QC results (task-unit files)
   dashboard: dashboard.md              # Human-readable summary (secondary data)
+  daily_log: "logs/daily/YYYY-MM-DD.md" # Karo appends cmd summary on completion. Shogun reads for daily reports.
   ntfy_inbox: queue/ntfy_inbox.yaml    # Incoming ntfy messages from Lord's phone
 
 cmd_format:
