@@ -327,3 +327,100 @@ YAML
     echo "$output" | grep -q '"block"'
     ! echo "$output" | grep -q 'dashboard.md未更新'
 }
+
+@test "T-HOOK-018: karo + cmd done today + daily log stale → daily log block" {
+    # karo が今日cmdを完了したが logs/daily/YYYY-MM-DD.md が未更新の場合ブロック
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks" "$TEST_TMP/logs/daily"
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "テストcmd"
+    read: true
+YAML
+    # dashboard.md を先に作成（最新 = dashboardチェック通過）
+    cat > "$TEST_TMP/queue/tasks/cmd_001.yaml" << 'YAML'
+task_id: cmd_001
+status: done
+YAML
+    sleep 1
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: now
+MD
+    # logs/daily/ は空（daily logなし）= stale
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"decision"'
+    echo "$output" | grep -q '"block"'
+    echo "$output" | grep -q '日報'
+}
+
+@test "T-HOOK-019: karo + cmd done today + daily log updated after cmd → daily log block不発（inbox blockで終了）" {
+    # daily log が cmd 完了後に更新済みならブロックしない
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks" "$TEST_TMP/logs/daily"
+    cat > "$TEST_TMP/queue/tasks/cmd_001.yaml" << 'YAML'
+task_id: cmd_001
+status: done
+YAML
+    sleep 1
+    TODAY=$(date +%Y-%m-%d)
+    cat > "$TEST_TMP/logs/daily/${TODAY}.md" << 'MD'
+# 日報
+## cmd_001
+完了
+MD
+    sleep 1
+    # dashboard も更新済み
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: now
+MD
+    # 未読inbox（高速終了用 — daily logブロックでないことを確認）
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "次のタスク"
+    read: false
+YAML
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"block"'
+    ! echo "$output" | grep -q '日報未追記'
+}
+
+@test "T-HOOK-020: karo + no logs/daily dir → daily log check スキップ（inbox blockで終了）" {
+    # logs/daily/ が存在しない場合は daily log チェックをスキップ
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks"
+    # logs/daily/ は作らない
+    cat > "$TEST_TMP/queue/tasks/cmd_001.yaml" << 'YAML'
+task_id: cmd_001
+status: done
+YAML
+    sleep 1
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: now
+MD
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "次のタスク"
+    read: false
+YAML
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"block"'
+    ! echo "$output" | grep -q '日報未追記'
+}

@@ -122,6 +122,38 @@ print(json.dumps({'decision': 'block', 'reason': reason}, ensure_ascii=False))
             exit 0
         fi
     fi
+
+    # ─── Karo: daily log freshness check ───
+    # If karo has completed a cmd task today but logs/daily/YYYY-MM-DD.md was not
+    # updated after that task's mtime, block and remind karo to write the daily log.
+    # Only runs if logs/daily/ directory exists (guards against test environments).
+    TODAY=$(date +%Y-%m-%d)
+    TODAY_MIDNIGHT=$(date -d "$TODAY 00:00:00" +%s 2>/dev/null || date +%s)
+    DAILY_LOG="$SCRIPT_DIR/logs/daily/${TODAY}.md"
+    DAILY_LOG_MTIME=$(stat -c %Y "$DAILY_LOG" 2>/dev/null || echo 0)
+    STALE_CMD_DAILY=""
+    if [ -d "$SCRIPT_DIR/logs/daily" ]; then
+        for task_file in "$SCRIPT_DIR/queue/tasks/cmd_"*.yaml; do
+            [ -f "$task_file" ] || continue
+            TASK_STATUS=$(grep '^status:' "$task_file" 2>/dev/null | head -1 | sed 's/^status:[[:space:]]*//' | tr -d '"' || true)
+            if [ "$TASK_STATUS" = "done" ]; then
+                TASK_MTIME=$(stat -c %Y "$task_file" 2>/dev/null || echo 0)
+                # Only check tasks completed today AND after the daily log's last update
+                if [ "$TASK_MTIME" -gt "$TODAY_MIDNIGHT" ] && [ "$TASK_MTIME" -gt "$DAILY_LOG_MTIME" ]; then
+                    STALE_CMD_DAILY=$(basename "$task_file" .yaml)
+                    break
+                fi
+            fi
+        done
+    fi
+    if [ -n "$STALE_CMD_DAILY" ]; then
+        python3 -c "
+import json
+reason = '日報未追記: ${STALE_CMD_DAILY}完了後にlogs/daily/${TODAY}.mdが更新されていません。日報追記を実行してください（karo.md Step 12-7 / Karo Direct Work Step 4）。'
+print(json.dumps({'decision': 'block', 'reason': reason}, ensure_ascii=False))
+" 2>/dev/null || echo "{\"decision\":\"block\",\"reason\":\"日報未追記: ${STALE_CMD_DAILY}完了後にlogs/daily/${TODAY}.mdが更新されていません。\"}"
+        exit 0
+    fi
 fi
 
 # ─── Check inbox for unread messages ───
