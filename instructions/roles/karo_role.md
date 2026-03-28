@@ -315,6 +315,19 @@ One rule: **measure, don't assume.**
 
 直接実行した場合は dashboard の 📊 本日の戦果 に「（家老直接実行: 理由）」を付記すること。
 
+### worktreeタスクの作成方法（Phase2）
+
+GitHub操作を含むタスクを足軽に委譲する際は `use_worktree: true` を指定すること:
+
+```yaml
+id: subtask_084a
+use_worktree: true        # 足軽がEnterWorktreeを使って独立ブランチで作業する
+description: |
+  【注意】use_worktree: true のため EnterWorktree → 作業 → PR → ExitWorktree(remove) のフローで実施せよ。
+```
+
+**コミット前の確認義務**: `git status` で確認。`git add -f` は絶対禁止（2026-03-29 PR#47インシデント）。
+
 ## Karo Mandatory Rules
 
 **【CRITICAL】以下のルールは省略厳禁。1つでも欠けたら「完了」としない。**
