@@ -207,3 +207,123 @@ YAML
     [ "$status" -eq 0 ]
     [ -z "$output" ] || ! echo "$output" | grep -q '"block"'
 }
+
+@test "T-HOOK-014: karo + cmd done + dashboard stale → block with dashboard reminder" {
+    # karo が cmd を完了したがdashboard.mdをまだ更新していない場合、ブロックする
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks"
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "テストcmd"
+    read: true
+YAML
+    # dashboard.md を先に作成（古いmtime）
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: 2026-03-28 08:00
+MD
+    sleep 1
+    # cmd task を後から作成（新しいmtime）
+    cat > "$TEST_TMP/queue/tasks/cmd_999.yaml" << 'YAML'
+task_id: cmd_999
+status: done
+YAML
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"decision"'
+    echo "$output" | grep -q '"block"'
+    echo "$output" | grep -q 'dashboard'
+}
+
+@test "T-HOOK-015: karo + cmd done + dashboard updated after cmd → dashboard block不発（inbox blockで終了）" {
+    # dashboard.md がcmd完了後に更新済みなら、dashboardブロックしない
+    # （高速化のため未読inboxを1件追加してinotifywait回避）
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks"
+    # cmd task を先に作成（古いmtime）
+    cat > "$TEST_TMP/queue/tasks/cmd_998.yaml" << 'YAML'
+task_id: cmd_998
+status: done
+YAML
+    sleep 1
+    # dashboard.md を後から作成（新しいmtime = 更新済み）
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: 2026-03-28 10:00
+MD
+    # 未読inbox（高速終了用 — dashboardブロックでないことを確認）
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "次のタスク"
+    read: false
+YAML
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    # ブロックされるがdashboardの理由ではない（inboxブロック）
+    echo "$output" | grep -q '"block"'
+    ! echo "$output" | grep -q 'dashboard.md未更新'
+}
+
+@test "T-HOOK-016: karo + cmd in_progress (not done) → dashboard block不発（inbox blockで終了）" {
+    # cmd が in_progress（完了前）ならdashboardブロックしない
+    # （高速化のため未読inboxを1件追加してinotifywait回避）
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks"
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: 2026-03-28 08:00
+MD
+    sleep 1
+    cat > "$TEST_TMP/queue/tasks/cmd_997.yaml" << 'YAML'
+task_id: cmd_997
+status: in_progress
+YAML
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "次のタスク"
+    read: false
+YAML
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"block"'
+    ! echo "$output" | grep -q 'dashboard.md未更新'
+}
+
+@test "T-HOOK-017: ashigaru + cmd done + dashboard stale → dashboard block不発（karo専用のため）" {
+    # ashigaruはdashboard freshnessチェック対象外
+    # （高速化のため未読inboxを1件追加してinotifywait回避）
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks"
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: 2026-03-28 08:00
+MD
+    sleep 1
+    cat > "$TEST_TMP/queue/tasks/cmd_996.yaml" << 'YAML'
+task_id: cmd_996
+status: done
+YAML
+    cat > "$TEST_TMP/queue/inbox/ashigaru1.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: karo
+    type: task_assigned
+    content: "次のタスク"
+    read: false
+YAML
+    run_hook '{"stop_hook_active": false, "last_assistant_message": ""}' "ashigaru1"
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"block"'
+    ! echo "$output" | grep -q 'dashboard.md未更新'
+}
