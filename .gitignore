@@ -80,11 +80,6 @@
 !context/README.md
 !context/worktree_guide.md
 
-# Daily logs (Karo appends cmd summary on completion)
-!logs/
-!logs/daily/
-!logs/daily/*.md
-
 # Python venv
 !requirements.txt
 
