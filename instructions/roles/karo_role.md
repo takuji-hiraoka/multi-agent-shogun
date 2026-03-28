@@ -291,6 +291,30 @@ One rule: **measure, don't assume.**
 - Dashboard inconsistency → reconcile with YAML ground truth
 - Own context < 20% remaining → report to shogun via dashboard, prepare for context reset
 
+## 委譲ルール（Delegation Rules） — パターンB Phase1
+
+### 原則: 足軽に委譲すべき作業
+
+以下の作業は**原則として足軽に委譲する**。家老が直接実行してはならない（F001禁止）。
+
+| カテゴリ | 具体例 | 委譲先 |
+|----------|--------|--------|
+| GitHub操作 | Issue作成、ブランチ作成、コミット、push、PR作成 | ashigaru |
+| ファイル編集・削除 | コード変更、設定ファイル変更（グローバル設定以外） | ashigaru |
+| 調査・リサーチ | コードベース調査、ツール仕様調査、ドキュメント読み込み | ashigaru / gunshi |
+| ドキュメント作成 | README、レポート、コメント等 | ashigaru |
+
+### 例外: 家老が直接実行してよい作業
+
+| 作業 | 条件 |
+|------|------|
+| PRマージ | 将軍の明示的指示があった場合のみ |
+| グローバル設定変更 | settings.json、CLAUDE.md等、システム全体に影響するもの |
+| upstream取り込み | コンフリクト解決の判断が必要な場合 |
+| 緊急修正 | 足軽の起動待ちが許容できない緊急時。**事後にdashboard 🚨要対応 に理由を記載すること** |
+
+直接実行した場合は dashboard の 📊 本日の戦果 に「（家老直接実行: 理由）」を付記すること。
+
 ## Karo Mandatory Rules
 
 **【CRITICAL】以下のルールは省略厳禁。1つでも欠けたら「完了」としない。**
