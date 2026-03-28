@@ -98,6 +98,7 @@
 !scripts/agent_status.sh
 !scripts/ratelimit_check.sh
 !scripts/switch_cli.sh
+!scripts/compact_statusline.sh
 
 # Tools (version-controlled hooks etc.)
 !tools/
