@@ -94,6 +94,36 @@ if [ -n "$LAST_MSG" ]; then
     fi
 fi
 
+# ─── Karo: dashboard freshness check ───
+# If karo has completed a cmd task but dashboard.md was not updated after it,
+# block and remind karo to update dashboard + send ntfy.
+if [ "$AGENT_ID" = "karo" ]; then
+    DASHBOARD="$SCRIPT_DIR/dashboard.md"
+    if [ -f "$DASHBOARD" ]; then
+        DASHBOARD_MTIME=$(stat -c %Y "$DASHBOARD" 2>/dev/null || echo 0)
+        STALE_CMD=""
+        for task_file in "$SCRIPT_DIR/queue/tasks/cmd_"*.yaml; do
+            [ -f "$task_file" ] || continue
+            TASK_STATUS=$(grep '^status:' "$task_file" 2>/dev/null | head -1 | sed 's/^status:[[:space:]]*//' | tr -d '"' || true)
+            if [ "$TASK_STATUS" = "done" ]; then
+                TASK_MTIME=$(stat -c %Y "$task_file" 2>/dev/null || echo 0)
+                if [ "$TASK_MTIME" -gt "$DASHBOARD_MTIME" ]; then
+                    STALE_CMD=$(basename "$task_file" .yaml)
+                    break
+                fi
+            fi
+        done
+        if [ -n "$STALE_CMD" ]; then
+            python3 -c "
+import json
+reason = 'dashboard.md未更新: ${STALE_CMD}完了後にdashboard.mdが更新されていません。dashboard更新→ntfy送信を実行してください（Karo Mandatory Rules 1a/1b）。'
+print(json.dumps({'decision': 'block', 'reason': reason}, ensure_ascii=False))
+" 2>/dev/null || echo "{\"decision\":\"block\",\"reason\":\"dashboard.md未更新: ${STALE_CMD}完了後にdashboard.mdが更新されていません。\"}"
+            exit 0
+        fi
+    fi
+fi
+
 # ─── Check inbox for unread messages ───
 INBOX="$SCRIPT_DIR/queue/inbox/${AGENT_ID}.yaml"
 
