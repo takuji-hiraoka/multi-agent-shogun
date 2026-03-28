@@ -10,9 +10,14 @@
 1. `EnterWorktree` (name: タスクID) → 独立ブランチ・worktreeに切り替わる
 2. 作業実施（ファイル編集、コード変更等）
 3. `git status` で確認（git add -f 禁止）
-4. コミット & push
-5. PR作成 (`gh pr create --repo ...`)
-6. `ExitWorktree(action: "remove")` → worktree削除・元のディレクトリに戻る
+4. mainの最新変更を取り込む（デグレ防止）
+   ```bash
+   git fetch origin main
+   git rebase origin/main   # rebase推奨。コンフリクト時は merge でも可
+   ```
+5. コミット & push
+6. PR作成 (`gh pr create --repo ...`)
+7. `ExitWorktree(action: "remove")` → worktree削除・元のディレクトリに戻る
 
 ## 注意事項
 
