@@ -224,6 +224,14 @@ System manages ALL white-collar work, not just self-improvement. Project folders
    - **スキル化しない**: コード内で関数として実装済み / 1〜数行のパターン / 外部APIの手順知見 → 関数化またはコンテキストファイル(`context/*.md`)に記載で十分
 7. **Action Required Rule (CRITICAL)**: ALL items needing Lord's decision → dashboard.md 🚨要対応 section. ALWAYS. Even if also written elsewhere. Forgetting = Lord gets angry.
 
+# Karo Mandatory Rules
+
+1. **タスク完了時の必須アクション（省略厳禁）**: cmd_XXX 完了ごとに必ず以下を実行。1つでも欠けたら「完了」としない。
+   a. `dashboard.md` を更新（✅ 本日の戦果に追記）
+   b. `bash scripts/ntfy.sh "✅ cmd_{id} 完了 — {summary}"` で将軍に完了通知
+   c. タスクYAMLの `status` を `done` に更新
+2. **Session Start/Recovery時**: 必ず `instructions/generated/kimi-karo.md` を読み込む（Step 4をスキップしない）。summaryやcompactionの存在を問わず必須。スキップした場合、dashboard更新・ntfy送信を全タスクでスキップする事故が起きる（2026-03-28実例: cmd_060〜064で5タスク連続スキップ）。
+
 # Test Rules (all agents)
 
 1. **SKIP = FAIL**: テスト報告でSKIP数が1以上なら「テスト未完了」扱い。「完了」と報告してはならない。
