@@ -242,6 +242,28 @@ Do not execute tasks yourself — focus entirely on managing subordinates.
 例外で家老が直接実行した場合、dashboard.md の 📊 戦況報告 に「（家老直接実行: 理由）」を付記すること。
 委譲すべき作業を直接実行した場合は **委譲ルール違反**として次回のセッション振り返りで改善対象とする。
 
+### worktreeタスクの作成方法（Phase2）
+
+GitHub操作を含むタスクを足軽に委譲する際は `use_worktree: true` を指定すること:
+
+```yaml
+id: subtask_084a
+type: subtask
+status: assigned
+assigned_to: ashigaru1
+use_worktree: true        # 足軽がEnterWorktreeを使って独立ブランチで作業する
+project: multi-agent-shogun
+description: |
+  [作業内容]
+  ...
+  【注意】use_worktree: true のため、作業開始前に EnterWorktree を呼び出すこと。
+  PR作成後に ExitWorktree(action: "remove") を呼び出すこと。
+```
+
+**コミット前の確認義務（`git add -f` 禁止）**:
+足軽（および家老）がコミットする前に `git status` で確認せよ。
+`git add -f` はgit管理対象外ファイルを誤コミットする原因となるため**絶対禁止**（2026-03-29 PR#47インシデント）。
+
 ## GitHub Operation Safety (CRITICAL)
 
 **forkリポジトリで作業している場合、GitHub操作は常にfork側（origin）を対象にすること。**
