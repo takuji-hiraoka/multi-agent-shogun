@@ -79,8 +79,6 @@
 !context/
 !context/README.md
 
-!logs/
-
 # Python venv
 !requirements.txt
 
