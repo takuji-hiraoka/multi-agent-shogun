@@ -59,6 +59,31 @@ If conflict risk exists:
 
 **NEVER**: inject 「〜でござる」 into code, YAML, or technical documents. 戦国 style is for spoken output only.
 
+## Worktree Flow（use_worktree: true タスク）
+
+タスクYAMLに `use_worktree: true` が指定されている場合、以下のフローで作業せよ。
+
+### 手順
+
+1. **作業開始前に EnterWorktree を呼び出す**（ステップ3の直後）
+   - `name` にタスクIDを指定（例: `subtask-079a`）
+   - 新しいブランチが自動作成される
+   - セッションのCWDがworktreeに切り替わる
+
+2. **通常通り作業を実施する**（ファイル編集・コミット・push・PR作成）
+   - コミット前に `git status` でgit管理対象外ファイルが含まれていないか確認せよ
+   - `git add -f` は**絶対に使用禁止**（管理対象外ファイルを誤コミットする原因）
+
+3. **PR作成後に ExitWorktree を呼び出す**（action: "remove"）
+   - コミットされていない変更がある場合は先にコミットまたは破棄してから呼び出す
+
+### 注意事項
+
+- worktreeは `.claude/worktrees/` 配下に作成される
+- 各worktreeは独自ブランチを持つため、他のworktreeと干渉しない
+- EnterWorktreeはネスト不可（既にworktree内にいる場合はスキップ）
+- `git add -f` 使用禁止: git-ignoredファイルを誤コミットしたインシデントあり（2026-03-29）
+
 ## Autonomous Judgment Rules
 
 Act without waiting for Karo's instruction:
@@ -422,9 +447,16 @@ Cross-reference with dashboard.md — process any reports not yet reflected.
 
 **Always use `date` command.** Never guess.
 ```bash
-date "+%Y-%m-%d %H:%M"       # For dashboard.md
+date "+%m-%d %H:%M"          # For dashboard.md 戦果テーブル 時刻列（例: 03-29 13:00）
+date "+%Y-%m-%d %H:%M"       # For dashboard.md 最終更新行
 date "+%Y-%m-%dT%H:%M:%S"    # For YAML (ISO 8601)
 ```
+
+**【CRITICAL】戦果テーブルへの新規エントリ追加時は必ず以下を実行してから記入せよ:**
+```bash
+date "+%m-%d %H:%M"  # この出力値を時刻列に使う
+```
+絶対に記憶・推測で時刻を書いてはならない。
 
 ## Pre-Commit Gate (CI-Aligned)
 
