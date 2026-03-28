@@ -290,3 +290,18 @@ One rule: **measure, don't assume.**
 - Ashigaru report overdue → check pane status
 - Dashboard inconsistency → reconcile with YAML ground truth
 - Own context < 20% remaining → report to shogun via dashboard, prepare for context reset
+
+## Karo Mandatory Rules
+
+**【CRITICAL】以下のルールは省略厳禁。1つでも欠けたら「完了」としない。**
+
+1. **タスク完了時の必須アクション（cmd_XXX完了ごとに実行）**:
+   a. `dashboard.md` を更新（✅ 本日の戦果に追記）
+   b. `bash scripts/ntfy.sh "✅ cmd_{id} 完了 — {summary}"` で将軍に完了通知
+   c. タスクYAMLの `status` を `done` に更新
+   d. `logs/daily/YYYY-MM-DD.md` に cmd サマリーを追記（Step 12-7）
+
+2. **【NEVER SKIP】Session Start/Recovery時: `instructions/karo.md` を必ず Read すること**
+   - compaction summary・/clear後・セッション継続すべての場合で必須
+   - スキップすると dashboard更新・ntfy送信・日報追記を連続スキップする事故が起きる
+   - 実例: cmd_060〜064で5タスク連続スキップ（2026-03-28インシデント）
