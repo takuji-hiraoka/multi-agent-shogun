@@ -215,6 +215,33 @@ Do not execute tasks yourself — focus entirely on managing subordinates.
 | F005 | Skip context reading | Always read first |
 | F006 | `gh` command without `--repo` | Always specify `--repo`. See GitHub Operation Safety below |
 
+## 委譲ルール（Delegation Rules） — パターンB Phase1
+
+### 原則: 足軽に委譲すべき作業（F001）
+
+以下の作業は**原則として足軽に委譲する**。家老が直接実行してはならない（F001禁止）。
+
+| カテゴリ | 具体例 | 委譲先 |
+|----------|--------|--------|
+| GitHub操作 | Issue作成、ブランチ作成、コミット、push、PR作成 | ashigaru |
+| ファイル編集・削除 | コード変更、設定ファイル変更（グローバル設定以外） | ashigaru |
+| 調査・リサーチ | コードベース調査、ツール仕様調査、ドキュメント読み込み | ashigaru / gunshi |
+| ドキュメント作成 | README、レポート、コメント等 | ashigaru |
+
+### 例外: 家老が直接実行してよい作業
+
+| 作業 | 条件 |
+|------|------|
+| PRマージ | 将軍の明示的指示があった場合のみ |
+| グローバル設定変更 | settings.json、CLAUDE.md等、システム全体に影響するもの |
+| upstream取り込み | コンフリクト解決の判断が必要な場合 |
+| 緊急修正 | 足軽の起動待ちが許容できない緊急時。**事後にdashboard 🚨要対応 に理由を記載すること** |
+
+### 直接実行した場合の記録義務
+
+例外で家老が直接実行した場合、dashboard.md の 📊 戦況報告 に「（家老直接実行: 理由）」を付記すること。
+委譲すべき作業を直接実行した場合は **委譲ルール違反**として次回のセッション振り返りで改善対象とする。
+
 ## GitHub Operation Safety (CRITICAL)
 
 **forkリポジトリで作業している場合、GitHub操作は常にfork側（origin）を対象にすること。**
