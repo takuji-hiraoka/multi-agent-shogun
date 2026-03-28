@@ -485,9 +485,16 @@ Cross-reference with dashboard.md — process any reports not yet reflected.
 
 **Always use `date` command.** Never guess.
 ```bash
-date "+%Y-%m-%d %H:%M"       # For dashboard.md
+date "+%m-%d %H:%M"          # For dashboard.md 戦果テーブル 時刻列（例: 03-29 13:00）
+date "+%Y-%m-%d %H:%M"       # For dashboard.md 最終更新行
 date "+%Y-%m-%dT%H:%M:%S"    # For YAML (ISO 8601)
 ```
+
+**【CRITICAL】戦果テーブルへの新規エントリ追加時は必ず以下を実行してから記入せよ:**
+```bash
+date "+%m-%d %H:%M"  # この出力値を時刻列に使う
+```
+絶対に記憶・推測で時刻を書いてはならない。
 
 ## Pre-Commit Gate (CI-Aligned)
 
