@@ -78,6 +78,7 @@
 # Context README
 !context/
 !context/README.md
+!context/worktree_guide.md
 
 # Python venv
 !requirements.txt
