@@ -526,7 +526,13 @@ Push notifications to the lord's phone via ntfy. Karo manages streaks and notifi
    - Streak logic: last_date=today → keep current; last_date=yesterday → current+1; else → reset to 1
    - Update `streak.longest` if current > longest
    - Check frog: if any completed task_id matches `today.frog` → 🐸 notification, reset frog
-7. → Step 13 (ntfy_gate) へ進む
+7. **Daily log append** → `logs/daily/YYYY-MM-DD.md` に cmd サマリーを追記:
+   - cmd ID, ステータス, 目的
+   - 足軽ごとの成果物一覧（subtask_id, 担当, 作成/変更ファイル）
+   - タイムライン（開始〜完了）
+   - 課題・気づき（あれば）
+   - ファイルが無ければヘッダー `# 日報 YYYY-MM-DD` 付きで新規作成
+8. → Step 13 (ntfy_gate) へ進む
 
 ### Karo Direct Work Completion (PR merge, direct tasks)
 
@@ -534,7 +540,8 @@ When Karo directly completes a cmd (PR merge, direct implementation, analysis):
 1. Complete the work
 2. **Immediately update `queue/shogun_to_karo.yaml`**: Set `status: done` and `completed_at`.
 3. Update dashboard.md
-4. → Step 13 (ntfy_gate) へ進む
+4. **Daily log append** → `logs/daily/YYYY-MM-DD.md` に cmd サマリーを追記
+5. → Step 13 (ntfy_gate) へ進む
 
 ### Eat the Frog (today.frog)
 
