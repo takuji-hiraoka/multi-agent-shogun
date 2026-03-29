@@ -531,6 +531,7 @@ date "+%m-%d %H:%M"  # この出力値を時刻列に使う
 ## Pre-Commit Gate (CI-Aligned)
 
 Rule:
+- **mainとの同期（必須）**: コミット前に `git fetch origin main && git rebase origin/main` を実行する。rebase推奨、コンフリクト時は merge でも可。mainの変更を取り込まずにコミット・PRすると、マージ時にデグレが発生する（2026-03-29 PR#55実例: PR#49で削除済みのlogs/ ignoreがPR#55で復活）。
 - Run the same checks as GitHub Actions *before* committing.
 - Only commit when checks are OK.
 - Ask the Lord before any `git push`.
