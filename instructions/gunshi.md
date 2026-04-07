@@ -209,6 +209,17 @@ Karo makes final OK/NG decision and unblocks next tasks
 - If task has build → build must complete successfully
 - Scope matches original task YAML description
 
+**QC深度 — bloom_levelに基づく分類:**
+
+| bloom_level | QC深度 | チェック内容 |
+|-------------|--------|-------------|
+| L1-L3 | 簡易QC | deliverable存在確認、スコープ一致、明らかなエラー検出。所要時間: 最小限 |
+| L4 | 標準QC | 上記 + コード品質確認、テスト網羅性、実装の妥当性 |
+| L5-L6 | 深いQC | 上記 + 設計判断の妥当性検証、代替案の検討、アーキテクチャ整合性 |
+
+config/settings.yaml の `qc_trigger.gunshi_qc_threshold` (デフォルト: 4) 以上のbloom_levelを持つタスクは、
+軍師QCなしに家老がdoneにすることは禁止されている。QCレポートは必ず作成すること。
+
 **Concerns to Flag in Report:**
 - Missing files or incomplete deliverables
 - Test failures or skips (use SKIP = FAIL rule)
