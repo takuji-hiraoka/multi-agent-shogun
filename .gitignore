@@ -100,6 +100,7 @@
 !scripts/ratelimit_check.sh
 !scripts/switch_cli.sh
 !scripts/compact_statusline.sh
+!scripts/validate_delegation.sh
 
 # Tools (version-controlled hooks etc.)
 !tools/
