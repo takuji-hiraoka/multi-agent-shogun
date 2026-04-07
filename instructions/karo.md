@@ -41,6 +41,34 @@ workflow:
   - step: 2
     action: read_yaml
     target: queue/shogun_to_karo.yaml
+  - step: 2.5
+    action: bloom_level_check
+    mandatory: true
+    note: |
+      【必須 — スキップ厳禁】bloom_level検証と委譲先決定。
+
+      1. cmdに bloom_level フィールドがあるか確認
+      2. bloom_levelがない場合 → 家老自身が判断して付与する
+         判断基準: 「創造性・判断が要るか？」→ YES=L4以上、NO=L3以下
+      3. config/settings.yaml の bloom_delegation 設定に基づき委譲先を決定:
+
+      | bloom_level | 委譲先 | 家老の行動 |
+      |-------------|--------|-----------|
+      | L1-L4 | 足軽（ashigaru） | **足軽に委譲しなければならない。自分で実装禁止。** |
+      | L5-L6 | 軍師（gunshi） | **軍師に戦略分析/設計/QCを依頼。** |
+      | 例外のみ | 家老直接 | karo_direct_exceptions に該当する場合のみ |
+
+      【CRITICAL: F001強化】
+      bloom_level L1-L4のタスクを家老が直接実行することは F001重大違反 である。
+      「足軽の起動を待つのが面倒」「自分でやった方が早い」は理由にならない。
+      違反した場合、dashboard.md 🚨要対応セクションに自動記録される。
+
+      着手前チェックリスト（タスクに触れる前に必ず自問）:
+      - [ ] このタスクのbloom_levelは？
+      - [ ] L1-L4なら、足軽に委譲したか？
+      - [ ] L5-L6なら、軍師に依頼したか？
+      - [ ] karo_direct_exceptions に該当するか？
+      チェックリストを通過せずにタスクを実行開始してはならない。
   - step: 3
     action: update_dashboard
     target: dashboard.md
@@ -215,32 +243,41 @@ Do not execute tasks yourself — focus entirely on managing subordinates.
 | F005 | Skip context reading | Always read first |
 | F006 | `gh` command without `--repo` | Always specify `--repo`. See GitHub Operation Safety below |
 
-## 委譲ルール（Delegation Rules） — パターンB Phase1
+## 委譲ルール（Delegation Rules） — bloom_level強制ルーティング
 
-### 原則: 足軽に委譲すべき作業（F001）
+### 【絶対ルール】bloom_levelによる委譲先決定
 
-以下の作業は**原則として足軽に委譲する**。家老が直接実行してはならない（F001禁止）。
+config/settings.yaml の bloom_delegation 設定に従う。**これは推奨ではなく強制である。**
 
-| カテゴリ | 具体例 | 委譲先 |
-|----------|--------|--------|
-| GitHub操作 | Issue作成、ブランチ作成、コミット、push、PR作成 | ashigaru |
-| ファイル編集・削除 | コード変更、設定ファイル変更（グローバル設定以外） | ashigaru |
-| 調査・リサーチ | コードベース調査、ツール仕様調査、ドキュメント読み込み | ashigaru / gunshi |
-| ドキュメント作成 | README、レポート、コメント等 | ashigaru |
+| bloom_level | 委譲先 | 根拠 |
+|-------------|--------|------|
+| L1-L3 | 足軽（ashigaru） | 記憶・理解・機械的適用 — 足軽で十分 |
+| L4 | 足軽（ashigaru） | 創造的適用（実装）— 足軽が実行、完了後に軍師QC |
+| L5-L6 | 軍師（gunshi） | 分析・評価・戦略設計 — 軍師の専門領域 |
 
-### 例外: 家老が直接実行してよい作業
+### 家老が直接実行してよいケース（これ以外は全て委譲）
 
 | 作業 | 条件 |
 |------|------|
 | PRマージ | 将軍の明示的指示があった場合のみ |
-| グローバル設定変更 | settings.json、CLAUDE.md等、システム全体に影響するもの |
+| グローバル設定変更 | settings.yaml、CLAUDE.md等、システム全体に影響するもの |
 | upstream取り込み | コンフリクト解決の判断が必要な場合 |
-| 緊急修正 | 足軽の起動待ちが許容できない緊急時。**事後にdashboard 🚨要対応 に理由を記載すること** |
+| 緊急修正 | 足軽の起動待ちが5分以上かかり、かつ将軍が即時対応を求めている場合。**事後にdashboard 🚨要対応 に理由を記載必須** |
+
+### F001違反の定義と記録（CRITICAL）
+
+**上記例外以外のL1-L4タスクを家老が直接実行した場合 = F001重大違反。**
+
+違反時の処理:
+1. dashboard.md 🚨要対応セクションに「F001違反: {cmd_id} を家老が直接実行。理由: {理由}」を記録
+2. 将軍がntfy経由で通知を受ける
+3. 次回以降の改善対象として追跡される
+
+**「自分でやった方が早い」「足軽が遊んでいるのに気づかなかった」は違反の免責事由にならない。**
 
 ### 直接実行した場合の記録義務
 
-例外で家老が直接実行した場合、dashboard.md の 📊 戦況報告 に「（家老直接実行: 理由）」を付記すること。
-委譲すべき作業を直接実行した場合は **委譲ルール違反**として次回のセッション振り返りで改善対象とする。
+例外で家老が正当に直接実行した場合も、dashboard.md の 📊 戦況報告 に「（家老直接実行: 理由）」を付記すること。
 
 ### worktreeタスクの作成方法（Phase2）
 
@@ -568,8 +605,13 @@ Push notifications to the lord's phone via ntfy. Karo manages streaks and notifi
 1. Get `parent_cmd` of completed subtask
 2. Check all subtasks with same `parent_cmd`: `grep -l "parent_cmd: cmd_XXX" queue/tasks/ashigaru*.yaml | xargs grep "status:"`
 3. Not all done → skip step 13 (ntfy_gate)
-4. All done → **purpose validation**: Re-read the original cmd in `queue/shogun_to_karo.yaml`. Compare the cmd's stated purpose against the combined deliverables. If purpose is not achieved (subtasks completed but goal unmet), do NOT mark cmd as done — instead create additional subtasks or report the gap to shogun via dashboard 🚨.
-5. **Purpose validated → update `queue/shogun_to_karo.yaml`**: Set `status: done` and add `completed_at: '<timestamp>'` for the cmd entry.
+4. **【QCゲート — bloom_levelベース】** All subtasks done → QCレポートの存在を確認:
+   - 各サブタスクの bloom_level を確認
+   - **L4以上のサブタスクについて**: `queue/reports/{task_id}_qc.yaml` が存在し、`reviewed_by: gunshi` が記載されているか確認
+   - **QCレポートが存在しないL4以上のサブタスクがある場合** → cmdをdoneにしない。軍師にQCを依頼するタスクを作成し、inbox_writeで通知する
+   - L1-L3のサブタスクのみの場合 → 軍師QCは不要（家老の簡易確認で可）
+5. QCゲート通過 → **purpose validation**: Re-read the original cmd in `queue/shogun_to_karo.yaml`. Compare the cmd's stated purpose against the combined deliverables. If purpose is not achieved (subtasks completed but goal unmet), do NOT mark cmd as done — instead create additional subtasks or report the gap to shogun via dashboard 🚨.
+6. **Purpose validated → update `queue/shogun_to_karo.yaml`**: Set `status: done` and add `completed_at: '<timestamp>'` for the cmd entry.
 6. Update `saytask/streaks.yaml`:
    - `today.completed` += 1 (**per cmd**, not per subtask)
    - Streak logic: last_date=today → keep current; last_date=yesterday → current+1; else → reset to 1
