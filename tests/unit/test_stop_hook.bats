@@ -424,3 +424,193 @@ YAML
     echo "$output" | grep -q '"block"'
     ! echo "$output" | grep -q '日報未追記'
 }
+
+# ─── T-HOOK-021〜026: bloom L4 QCゲートチェック ───
+
+@test "T-HOOK-021: karo + bloom L4 done task without QC report → block" {
+    # karo が bloom_level L4 のタスクをdoneにしたがQCレポートなし → ブロック
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks" "$TEST_TMP/queue/reports"
+    # dashboard と daily log は最新にしてそれらのブロックを回避
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: now
+MD
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "テスト"
+    read: true
+YAML
+    cat > "$TEST_TMP/queue/tasks/ashigaru1.yaml" << 'YAML'
+task:
+  task_id: subtask_test_l4
+  bloom_level: L4
+  status: done
+YAML
+    # QCレポートなし（queue/reports/ は空）
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"decision"'
+    echo "$output" | grep -q '"block"'
+    echo "$output" | grep -q 'QC'
+}
+
+@test "T-HOOK-022: karo + bloom L4 done task with gunshi QC report → no QC block" {
+    # karo が bloom_level L4 のタスクをdoneにし、QCレポートあり(reviewed_by: gunshi) → QCブロック不発
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks" "$TEST_TMP/queue/reports"
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: now
+MD
+    cat > "$TEST_TMP/queue/tasks/ashigaru1.yaml" << 'YAML'
+task:
+  task_id: subtask_test_l4b
+  bloom_level: L4
+  status: done
+YAML
+    # QCレポートあり（reviewed_by: gunshi）
+    cat > "$TEST_TMP/queue/reports/subtask_test_l4b_qc.yaml" << 'YAML'
+task_id: subtask_test_l4b
+reviewed_by: gunshi
+result: pass
+YAML
+    # 未読inbox（高速終了用 — QCブロックでないことを確認）
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "次のタスク"
+    read: false
+YAML
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"block"'
+    ! echo "$output" | grep -q 'QC'
+}
+
+@test "T-HOOK-023: karo + bloom L3 done task without QC report → no QC block" {
+    # bloom_level L3 はQCゲート対象外 → ブロック不発
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks" "$TEST_TMP/queue/reports"
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: now
+MD
+    cat > "$TEST_TMP/queue/tasks/ashigaru1.yaml" << 'YAML'
+task:
+  task_id: subtask_test_l3
+  bloom_level: L3
+  status: done
+YAML
+    # QCレポートなし
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "次のタスク"
+    read: false
+YAML
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"block"'
+    ! echo "$output" | grep -q 'QC'
+}
+
+@test "T-HOOK-024: karo + bloom L4 done task QC report without gunshi → block" {
+    # QCレポートはあるがreviewed_by: gunshiなし → ブロック
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks" "$TEST_TMP/queue/reports"
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: now
+MD
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "テスト"
+    read: true
+YAML
+    cat > "$TEST_TMP/queue/tasks/ashigaru1.yaml" << 'YAML'
+task:
+  task_id: subtask_test_l4c
+  bloom_level: L4
+  status: done
+YAML
+    # QCレポートあり、しかし reviewed_by: ashigaru（gunshiではない）
+    cat > "$TEST_TMP/queue/reports/subtask_test_l4c_qc.yaml" << 'YAML'
+task_id: subtask_test_l4c
+reviewed_by: ashigaru1
+result: pass
+YAML
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"decision"'
+    echo "$output" | grep -q '"block"'
+    echo "$output" | grep -q 'QC'
+}
+
+@test "T-HOOK-025: karo + bloom L4 in_progress task → no QC check" {
+    # in_progress（未完了）のタスクはQCゲート対象外 → ブロック不発
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks" "$TEST_TMP/queue/reports"
+    cat > "$TEST_TMP/dashboard.md" << 'MD'
+# 戦況報告
+最終更新: now
+MD
+    cat > "$TEST_TMP/queue/tasks/ashigaru1.yaml" << 'YAML'
+task:
+  task_id: subtask_test_l4d
+  bloom_level: L4
+  status: in_progress
+YAML
+    # QCレポートなし
+    cat > "$TEST_TMP/queue/inbox/karo.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: shogun
+    type: cmd_new
+    content: "次のタスク"
+    read: false
+YAML
+    __STOP_HOOK_SCRIPT_DIR="$TEST_TMP" \
+    __STOP_HOOK_AGENT_ID="karo" \
+    run bash "$HOOK_SCRIPT" <<< '{"stop_hook_active": false, "last_assistant_message": ""}'
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"block"'
+    ! echo "$output" | grep -q 'QC'
+}
+
+@test "T-HOOK-026: non-karo agent bloom L4 task → no QC check" {
+    # karo以外のエージェント（ashigaru）はQCゲート対象外 → ブロック不発
+    mkdir -p "$TEST_TMP/queue/inbox" "$TEST_TMP/queue/tasks" "$TEST_TMP/queue/reports"
+    cat > "$TEST_TMP/queue/tasks/ashigaru1.yaml" << 'YAML'
+task:
+  task_id: subtask_test_l4e
+  bloom_level: L4
+  status: done
+YAML
+    # QCレポートなし
+    cat > "$TEST_TMP/queue/inbox/ashigaru1.yaml" << 'YAML'
+messages:
+  - id: msg_001
+    from: karo
+    type: task_assigned
+    content: "次のタスク"
+    read: false
+YAML
+    run_hook '{"stop_hook_active": false, "last_assistant_message": ""}' "ashigaru1"
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"block"'
+    ! echo "$output" | grep -q 'QC'
+}
