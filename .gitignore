@@ -98,6 +98,7 @@
 !scripts/stop_hook_inbox.sh
 !scripts/agent_status.sh
 !scripts/ratelimit_check.sh
+!scripts/context_all.sh
 !scripts/switch_cli.sh
 !scripts/compact_statusline.sh
 !scripts/validate_delegation.sh
