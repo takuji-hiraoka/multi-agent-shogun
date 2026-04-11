@@ -606,6 +606,11 @@ Push notifications to the lord's phone via ntfy. Karo manages streaks and notifi
 2. Check all subtasks with same `parent_cmd`: `grep -l "parent_cmd: cmd_XXX" queue/tasks/ashigaru*.yaml | xargs grep "status:"`
 3. Not all done → skip step 13 (ntfy_gate)
 4. **【QCゲート — bloom_levelベース】** All subtasks done → QCレポートの存在を確認:
+
+   > ⚠️ 絶対遵守: QCゲートのスキップは禁止
+   > bloom_level L4以上のサブタスクがdoneの場合、queue/reports/{task_id}_qc.yaml（reviewed_by: gunshi）の
+   > 存在を確認するまで絶対にcmdをdoneにしてはならない。
+   > stop_hookがこのルールを機械的に検証する。スキップした場合はstop_hookでブロックされる。
    - 各サブタスクの bloom_level を確認
    - **L4以上のサブタスクについて**: `queue/reports/{task_id}_qc.yaml` が存在し、`reviewed_by: gunshi` が記載されているか確認
    - **QCレポートが存在しないL4以上のサブタスクがある場合** → cmdをdoneにしない。軍師にQCを依頼するタスクを作成し、inbox_writeで通知する

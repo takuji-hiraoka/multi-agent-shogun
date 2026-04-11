@@ -154,6 +154,59 @@ print(json.dumps({'decision': 'block', 'reason': reason}, ensure_ascii=False))
 " 2>/dev/null || echo "{\"decision\":\"block\",\"reason\":\"日報未追記: ${STALE_CMD_DAILY}完了後にlogs/daily/${TODAY}.mdが更新されていません。\"}"
         exit 0
     fi
+
+    # ─── Karo: bloom L4以上タスクのQCゲートチェック ───
+    # bloom_level L4以上のサブタスクがdoneになっているが、軍師QCレポートが
+    # 存在しない（またはreviewed_by: gunshiがない）場合にブロックする。
+    QC_MISSING=""
+    for yaml in "$SCRIPT_DIR/queue/tasks/ashigaru"*.yaml; do
+        [ -f "$yaml" ] || continue
+        STATUS=$(python3 -c "
+import sys, yaml as y
+try:
+    d = y.safe_load(open('$yaml'))
+    t = d.get('task', d) if d else {}
+    print(t.get('status', ''))
+except: pass
+" 2>/dev/null || true)
+        [ "$STATUS" = "done" ] || continue
+        BLOOM=$(python3 -c "
+import sys, yaml as y
+try:
+    d = y.safe_load(open('$yaml'))
+    t = d.get('task', d) if d else {}
+    print(t.get('bloom_level', ''))
+except: pass
+" 2>/dev/null || true)
+        BLOOM_NUM=$(echo "$BLOOM" | grep -oP '\d+' || true)
+        [ -n "$BLOOM_NUM" ] || continue
+        [ "$BLOOM_NUM" -ge 4 ] 2>/dev/null || continue
+        TASK_ID=$(python3 -c "
+import sys, yaml as y
+try:
+    d = y.safe_load(open('$yaml'))
+    t = d.get('task', d) if d else {}
+    print(t.get('task_id', ''))
+except: pass
+" 2>/dev/null || true)
+        [ -n "$TASK_ID" ] && [ "$TASK_ID" != "null" ] || continue
+        QC_FILE="$SCRIPT_DIR/queue/reports/${TASK_ID}_qc.yaml"
+        if [ ! -f "$QC_FILE" ]; then
+            QC_MISSING="${TASK_ID} (bloom: ${BLOOM}) QCレポートなし"
+            break
+        elif ! grep -q "reviewed_by: gunshi" "$QC_FILE"; then
+            QC_MISSING="${TASK_ID} (bloom: ${BLOOM}) 軍師レビューなし"
+            break
+        fi
+    done
+    if [ -n "$QC_MISSING" ]; then
+        python3 -c "
+import json
+reason = 'QCゲートブロック: ${QC_MISSING}。queue/reports/{task_id}_qc.yaml（reviewed_by: gunshi）が必要です。軍師QCを依頼してください（karo.md QCゲートルール）。'
+print(json.dumps({'decision': 'block', 'reason': reason}, ensure_ascii=False))
+" 2>/dev/null || echo "{\"decision\":\"block\",\"reason\":\"QCゲートブロック: ${QC_MISSING}。軍師QCレポートが必要です。\"}"
+        exit 0
+    fi
 fi
 
 # ─── Check inbox for unread messages ───
