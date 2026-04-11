@@ -161,34 +161,14 @@ print(json.dumps({'decision': 'block', 'reason': reason}, ensure_ascii=False))
     QC_MISSING=""
     for yaml in "$SCRIPT_DIR/queue/tasks/ashigaru"*.yaml; do
         [ -f "$yaml" ] || continue
-        STATUS=$(python3 -c "
-import sys, yaml as y
-try:
-    d = y.safe_load(open('$yaml'))
-    t = d.get('task', d) if d else {}
-    print(t.get('status', ''))
-except: pass
-" 2>/dev/null || true)
+        # PyYAML非依存: grep/sedでYAMLフィールドを抽出（macOS互換）
+        STATUS=$(grep -E '^\s*status:' "$yaml" | head -1 | sed 's/^.*status:[[:space:]]*//' | tr -d '"' | tr -d "'" | xargs)
         [ "$STATUS" = "done" ] || continue
-        BLOOM=$(python3 -c "
-import sys, yaml as y
-try:
-    d = y.safe_load(open('$yaml'))
-    t = d.get('task', d) if d else {}
-    print(t.get('bloom_level', ''))
-except: pass
-" 2>/dev/null || true)
+        BLOOM=$(grep -E '^\s*bloom_level:' "$yaml" | head -1 | sed 's/^.*bloom_level:[[:space:]]*//' | tr -d '"' | tr -d "'" | xargs)
         BLOOM_NUM=$(echo "$BLOOM" | sed 's/[^0-9]//g')
         [ -n "$BLOOM_NUM" ] || continue
         [ "$BLOOM_NUM" -ge 4 ] 2>/dev/null || continue
-        TASK_ID=$(python3 -c "
-import sys, yaml as y
-try:
-    d = y.safe_load(open('$yaml'))
-    t = d.get('task', d) if d else {}
-    print(t.get('task_id', ''))
-except: pass
-" 2>/dev/null || true)
+        TASK_ID=$(grep -E '^\s*task_id:' "$yaml" | head -1 | sed 's/^.*task_id:[[:space:]]*//' | tr -d '"' | tr -d "'" | xargs)
         [ -n "$TASK_ID" ] && [ "$TASK_ID" != "null" ] || continue
         QC_FILE="$SCRIPT_DIR/queue/reports/${TASK_ID}_qc.yaml"
         if [ ! -f "$QC_FILE" ]; then
