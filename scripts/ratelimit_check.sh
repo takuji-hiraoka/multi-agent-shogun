@@ -179,6 +179,20 @@ CLAUDE_CREDS="$HOME/.claude/.credentials.json"
 if [[ ${#CLAUDE_AGENTS[@]} -gt 0 ]] && [[ -f "$CLAUDE_CREDS" ]] && [[ -x "$PYTHON" ]]; then
     oauth_data=$("$PYTHON" -c "
 import json, subprocess, sys
+from datetime import datetime, timezone
+
+def to_local_ts(ts_str):
+    if not ts_str or ts_str == '?':
+        return '?'
+    try:
+        clean = ts_str.rstrip('Z').split('.')[0][:16]
+        dt_utc = datetime.strptime(clean, '%Y-%m-%dT%H:%M').replace(tzinfo=timezone.utc)
+        dt_local = dt_utc.astimezone()
+        tz_name = dt_local.strftime('%Z')
+        offset_h = int(dt_local.utcoffset().total_seconds() / 3600)
+        return dt_local.strftime('%Y-%m-%d %H:%M') + f' {tz_name} (GMT{offset_h:+d})'
+    except Exception:
+        return ts_str[:16]
 
 with open('${CLAUDE_CREDS}') as f:
     creds = json.load(f)
@@ -203,7 +217,7 @@ so = data.get('seven_day_opus') or {}
 ex = data.get('extra_usage') or {}
 
 print(f'5H_UTIL={fh.get(\"utilization\", \"?\")}')
-print(f'5H_RESET={fh.get(\"resets_at\", \"?\")[:16]}')
+print(f'5H_RESET={to_local_ts(fh.get(\"resets_at\", \"?\"))}')
 print(f'7D_UTIL={sd.get(\"utilization\", \"?\")}')
 print(f'7D_RESET={sd.get(\"resets_at\", \"?\")[:10]}')
 print(f'7D_SONNET={ss.get(\"utilization\", \"-\")}')
