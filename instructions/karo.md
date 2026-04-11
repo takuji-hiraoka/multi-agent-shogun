@@ -872,6 +872,41 @@ When conditions met → execute self-/clear:
 
 **Why this helps**: Prevents the 4% context exhaustion that halted karo during cmd_166 (2,754 article production).
 
+### cmd完了即/clear原則
+
+After completing a cmd (Step 12-13 fully done), evaluate /clear EVERY time.
+
+#### /clear実行条件（ALL満たす場合に実行）
+
+1. **Step 12-13全完了**: dashboard更新済み・ntfy送信済み・日報追記済み
+2. **inbox未読ゼロ**: `queue/inbox/karo.yaml` に `read: false` が0件
+3. **足軽idle or 30分超経過**: 全足軽がidle、または最後のdispatchから30分以上経過
+
+#### /clear前の必須手順
+
+```
+1. bash scripts/slim_yaml.sh karo   # YAML圧縮
+2. queue/tasks/karo.yaml の handoff_note に引き継ぎ情報を記載（5行以内）
+3. /clear 実行
+```
+
+#### /clear禁止タイミング
+
+| 状況 | 理由 |
+|------|------|
+| Step 12-13の途中（dashboard未更新 or ntfy未送信） | ルールが揮発する |
+| dispatch直後で報告待ち（30分未満） | 未処理報告が来る可能性 |
+
+#### handoff_note 記載例
+
+```yaml
+handoff_note: |
+  cmd_117〜121は同一PR#6の作業。マージ待ち。
+  cmd_122はQC PASS済み。PR#67マージ待ち。
+```
+
+Session Start時に `queue/tasks/karo.yaml` を読む際に自動的に引き継がれる。
+
 ## Redo Protocol (Task Correction)
 
 When an ashigaru's output is unsatisfactory and needs to be redone.
