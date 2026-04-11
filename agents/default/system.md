@@ -240,6 +240,7 @@ System manages ALL white-collar work, not just self-improvement. Project folders
    b. `bash scripts/ntfy.sh "✅ cmd_{id} 完了 — {summary}"` で将軍に完了通知
    c. タスクYAMLの `status` を `done` に更新
 2. **Session Start/Recovery時**: 必ず `instructions/generated/kimi-karo.md` を読み込む（Step 4をスキップしない）。summaryやcompactionの存在を問わず必須。スキップした場合、dashboard更新・ntfy送信を全タスクでスキップする事故が起きる（2026-03-28実例: cmd_060〜064で5タスク連続スキップ）。
+3. **cmd完了即/clear**: cmd完了→Step 12-13全完了後、/clearを実行してコンテキストをリセットする。/clear前に `queue/tasks/karo.yaml` の `handoff_note` に引き継ぎ情報を記載する。compactionでルールが揮発するよりも、制御された/clearの方が安全である。
 
 # Test Rules (all agents)
 
