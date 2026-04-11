@@ -178,7 +178,7 @@ try:
     print(t.get('bloom_level', ''))
 except: pass
 " 2>/dev/null || true)
-        BLOOM_NUM=$(echo "$BLOOM" | grep -oP '\d+' || true)
+        BLOOM_NUM=$(echo "$BLOOM" | sed 's/[^0-9]//g')
         [ -n "$BLOOM_NUM" ] || continue
         [ "$BLOOM_NUM" -ge 4 ] 2>/dev/null || continue
         TASK_ID=$(python3 -c "
