@@ -102,6 +102,7 @@
 !scripts/switch_cli.sh
 !scripts/compact_statusline.sh
 !scripts/validate_delegation.sh
+!scripts/dashboard-viewer.py
 
 # Tools (version-controlled hooks etc.)
 !tools/
@@ -190,6 +191,7 @@ tests/specs/osato_lms_*
 
 # CI/CD
 !.github/
+!.github/FUNDING.yml
 !.github/workflows/
 !.github/workflows/*.yml
 
