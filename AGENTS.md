@@ -37,6 +37,7 @@ task_status_transitions:
   - "assigned → failed (ashigaru fails)"
   - "pending_blocked（家老キュー保留）→ assigned（依存完了後に割当）"
   - "RULE: Ashigaru updates OWN yaml only. Never touch other ashigaru's yaml."
+  - "RULE: On /clear recovery, if assigned=done → DO NOT re-send report. Wait idle. (prevents duplicate report loop)"
   - "RULE: blocked状態タスクを足軽へ事前割当しない。前提完了までpending_tasksで保留。"
 
 # Status definitions are authoritative in:
@@ -89,7 +90,7 @@ Lightweight recovery using only AGENTS.md (auto-loaded). Do NOT read instruction
 ```
 Step 1: tmux display-message -t "$TMUX_PANE" -p '#{@agent_id}' → ashigaru{N} or gunshi
 Step 2: (gunshi only) mcp__memory__read_graph (skip on failure). Ashigaru skip — task YAML is sufficient.
-Step 3: Read queue/tasks/{your_id}.yaml → assigned=work, idle=wait
+Step 3: Read queue/tasks/{your_id}.yaml → assigned=work, idle=wait, done=wait (DO NOT re-report)
 Step 3.5: If assigned → Edit queue/tasks/{your_id}.yaml: status → in_progress
 Step 4: If task has "project:" field → read context/{project}.md
         If task has "target_path:" → read that file
