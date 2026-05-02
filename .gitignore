@@ -102,6 +102,7 @@
 !scripts/switch_cli.sh
 !scripts/compact_statusline.sh
 !scripts/validate_delegation.sh
+!scripts/validate_task_yaml.sh
 !scripts/dashboard-viewer.py
 !scripts/setup_venv.sh
 
