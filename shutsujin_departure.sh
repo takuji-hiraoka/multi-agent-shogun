@@ -149,7 +149,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --auto-mode-on)
-            PERMISSION_FLAG="--permission-mode auto-approved"
+            PERMISSION_FLAG="--permission-mode auto"
             shift
             ;;
         --permission-mode)
