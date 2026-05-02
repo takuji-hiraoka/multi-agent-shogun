@@ -136,6 +136,19 @@ for dir in lib scripts; do
 done
 
 # ──────────────────────────────────────────────
+# 6. queue/tasks/*.yaml の妥当性検証（#80a check1）
+# ──────────────────────────────────────────────
+STAGED_TASK_YAMLS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^queue/tasks/.*\.yaml$' || true)
+if [ -n "$STAGED_TASK_YAMLS" ]; then
+  echo "🔍 タスクYAML妥当性検証中..."
+  # shellcheck disable=SC2086
+  if ! bash "$REPO_ROOT/scripts/validate_task_yaml.sh" $STAGED_TASK_YAMLS; then
+    echo "❌ pre-commit: タスクYAML検証に失敗しました。"
+    FAIL=1
+  fi
+fi
+
+# ──────────────────────────────────────────────
 # 結果
 # ──────────────────────────────────────────────
 if [ "$FAIL" -eq 1 ]; then
