@@ -103,6 +103,7 @@
 !scripts/compact_statusline.sh
 !scripts/validate_delegation.sh
 !scripts/dashboard-viewer.py
+!scripts/setup_venv.sh
 
 # Tools (version-controlled hooks etc.)
 !tools/

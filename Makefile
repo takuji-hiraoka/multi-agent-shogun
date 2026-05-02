@@ -109,12 +109,8 @@ install-deps:
 	@if [ ! -d tests/test_helper/bats-assert ]; then \
 		git clone --depth 1 https://github.com/bats-core/bats-assert tests/test_helper/bats-assert; \
 	fi
-	@echo "3. Checking venv + PyYAML..."
-	@if [ ! -f .venv/bin/python3 ]; then \
-		echo "WARNING: .venv not found. Run: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"; \
-	elif ! .venv/bin/python3 -c "import yaml" 2>/dev/null; then \
-		echo "WARNING: PyYAML not in venv. Run: .venv/bin/pip install -r requirements.txt"; \
-	fi
+	@echo "3. Setting up .venv..."
+	@bash scripts/setup_venv.sh
 	@echo "✓ Dependencies installed"
 
 # Clean test artifacts

@@ -8,6 +8,11 @@ setup() {
     TEST_TMP="$(mktemp -d)"
     PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
 
+    # .venv が存在しなければ自動セットアップ（bats 直接実行時も動作するよう保証）
+    if [ ! -x "${PROJECT_ROOT}/.venv/bin/python3" ]; then
+        bash "${PROJECT_ROOT}/scripts/setup_venv.sh" >/dev/null 2>&1
+    fi
+
     # テスト用settings.yaml
     cat > "${TEST_TMP}/settings.yaml" << 'YAML'
 cli:
