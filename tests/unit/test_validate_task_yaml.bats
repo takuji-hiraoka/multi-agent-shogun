@@ -18,6 +18,11 @@ VALIDATE_SCRIPT="$SCRIPT_DIR/scripts/validate_task_yaml.sh"
 
 setup() {
     TEST_TMP="$(mktemp -d)"
+
+    # .venv が存在しなければ自動セットアップ（bats 直接実行時も動作するよう保証）
+    if [ ! -x "${SCRIPT_DIR}/.venv/bin/python3" ]; then
+        bash "${SCRIPT_DIR}/scripts/setup_venv.sh" >/dev/null 2>&1
+    fi
 }
 
 teardown() {

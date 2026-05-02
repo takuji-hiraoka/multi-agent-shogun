@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # validate_task_yaml.sh — タスクYAML妥当性検証スクリプト
+# YAMLパース: .venv/bin/python3 + PyYAML（PR#91 setup_venv 前提）
 # Usage: bash scripts/validate_task_yaml.sh [file.yaml ...]
 # 引数なし: queue/tasks/*.yaml を対象
 
@@ -7,6 +8,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# .venv 不在時は setup_venv.sh を自動呼び出し
+VENV_PY="${REPO_ROOT}/.venv/bin/python3"
+if [ ! -x "$VENV_PY" ]; then
+    bash "${REPO_ROOT}/scripts/setup_venv.sh" >&2
+fi
 
 # 引数なし → queue/tasks/*.yaml を対象
 if [[ $# -eq 0 ]]; then
@@ -25,16 +32,27 @@ warn() {
 }
 
 # ──────────────────────────────────────────────
-# YAMLパーサ: yq 優先、なければ grep/sed フォールバック
+# YAMLパーサ: .venv/bin/python3 + PyYAML
+# .task.{field} を優先、なければ .{field} を参照（yq ".task.X // .X" と同等）
 # ──────────────────────────────────────────────
 get_field() {
   local file="$1"
   local field="$2"
-  if command -v yq &>/dev/null; then
-    yq e ".task.${field} // .${field}" "$file" 2>/dev/null | grep -v '^null$' || true
-  else
-    grep -oP "${field}:\s*\K\S+" "$file" 2>/dev/null | head -1 || true
-  fi
+  # shellcheck disable=SC2016
+  "$VENV_PY" - "$file" "$field" <<'PYEOF' 2>/dev/null || true
+import sys, yaml
+path, field = sys.argv[1], sys.argv[2]
+with open(path) as f:
+    data = yaml.safe_load(f) or {}
+task = data.get("task") if isinstance(data.get("task"), dict) else None
+if task and field in task:
+    val = task[field]
+else:
+    val = data.get(field)
+if val is None:
+    sys.exit(0)
+print(val)
+PYEOF
 }
 
 # ──────────────────────────────────────────────
