@@ -45,3 +45,32 @@ spec_citations:
 - 将軍のタスクYAML作成ルール: `instructions/shogun.md` → 外部仕様断定文の検証要件
 - 家老のタスクYAML確認義務: `instructions/karo.md` → 外部仕様断定文の検証義務
 - 自動検証（断定表現の検出）: `scripts/validate_task_yaml.sh` check4（Issue #90 / Wave 3）で実装予定
+
+## bloom_level 関連フィールド
+
+### external_dependency
+外部API/SDK 依存の有無と種類。
+
+```yaml
+external_dependency: none | notion_api | github_api | browser_extension | openai_api | ...
+# none 以外は bloom_level L4+ 強制。
+```
+
+### user_facing_ui
+エンドユーザー対面UI（Chrome 拡張、Web UI、デスクトップ UI 等）を含むか。
+
+```yaml
+user_facing_ui: true | false
+# true なら bloom_level L4+ 強制。
+```
+
+### spec_assumptions
+検証済みの外部仕様前提のリスト（詳細は spec_citations フィールド: Issue #83 参照）。
+
+```yaml
+spec_assumptions: []
+# 空なら問題なし。非空なら spec_citations と整合させる。
+```
+
+※ 自動検証（external_dependency != none / user_facing_ui: true かつ bloom_level L3 以下の検出）は
+  scripts/validate_task_yaml.sh check2-3（Issue #90 / Wave 3）で実装予定。

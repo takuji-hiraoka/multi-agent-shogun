@@ -1079,9 +1079,14 @@ except Exception:
     local candidate
     for candidate in $candidates; do
         # tmux pane ターゲットを @agent_id で逆引き
+        # CLI_ADAPTER_NO_TMUX=1 の場合（ユニットテスト等でtmuxが利用可能でもスキップ）
         local pane_target
-        pane_target=$(tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{@agent_id}' 2>/dev/null \
-            | awk -v agent="$candidate" '$2 == agent {print $1}' | head -1)
+        if [[ "${CLI_ADAPTER_NO_TMUX:-}" == "1" ]]; then
+            pane_target=""
+        else
+            pane_target=$(tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{@agent_id}' 2>/dev/null \
+                | awk -v agent="$candidate" '$2 == agent {print $1}' | head -1)
+        fi
 
         if [[ -z "$pane_target" ]]; then
             # tmuxセッションが存在しない（ユニットテスト環境等）→ 候補をそのまま返す
