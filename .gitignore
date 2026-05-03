@@ -123,6 +123,7 @@
 # Docs
 !docs/
 !docs/philosophy.md
+!docs/task_yaml_schema.md
 
 # Screenshots (masked — no secrets)
 !images/

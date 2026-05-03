@@ -70,6 +70,20 @@ task:
   timestamp: "2026-01-25T12:00:00"
 ```
 
+### 外部仕様断定文の検証義務（タスクYAML確認時）
+
+将軍から受け取ったタスクYAMLに外部仕様の断定文を見つけた場合:
+- `spec_citations` フィールドが添付されているか確認
+- (a)/(b)/(c) のいずれかが満たされているか確認
+  - (a) 一次情報源URL（公式ドキュメントの該当セクション）
+  - (b) 過去の検証 cmd 参照（例: `cmd_XXX で実API確認済み`）
+  - (c) タスク内で verify するステップ（受け入れ条件に含む）
+- いずれも欠けている場合、即座に inbox_write で将軍に問い合わせ、
+  タスクYAMLの再発行を求めること（不確かなまま実装着手しない）
+
+`spec_citations` フィールドの定義については `docs/task_yaml_schema.md` を参照。
+自動検証（断定表現の検出）は `scripts/validate_task_yaml.sh` check4（Issue #90 / Wave 3）で実装予定。
+
 ## echo_message Rule
 
 echo_message field is OPTIONAL.
