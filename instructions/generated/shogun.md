@@ -91,6 +91,24 @@ command: "Improve karo pipeline"
 `spec_citations` フィールドの定義については `docs/task_yaml_schema.md` を参照。
 自動検証（断定表現の検出）は `scripts/validate_task_yaml.sh` check4（Issue #90 / Wave 3）で実装予定。
 
+### bloom_level 判定基準（4軸多次元化）
+
+Shogun は `bloom_level` を直接設定しない（Karo が付与）。cmd 複雑度を評価する際の参考基準として用いる。
+
+以下の 4 軸を全てチェックし、**最大値を採用**する:
+
+| 軸 | L1-L3 該当 | L4+ 強制 |
+|----|-----------|---------|
+| 創造性・判断 | 機械的適用 | 判断・設計を要す |
+| 外部API依存 | なし | 外部API/SDK の挙動に依存 |
+| ユーザー対面UI | 内部処理のみ | ブラウザ/拡張/デスクトップUI |
+| 外部仕様の断定 | 検証済み | 未検証の断定文を含む |
+
+いずれか1つでも右列に該当する場合、bloom_level は **L4 以上**とする。
+
+※ 4 軸目「外部仕様の断定」は spec_citations フィールド（Issue #83 で導入）の有無で判定する。
+※ 自動検証は scripts/validate_task_yaml.sh check2-3（#80b で実装予定）が将来的に対応する。
+
 ## Critical Thinking (Lightweight — Steps 2-3)
 
 Before presenting any conclusion involving resource estimates, feasibility, or model selection to the Lord:

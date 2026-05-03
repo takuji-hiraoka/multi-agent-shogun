@@ -176,6 +176,22 @@ status to `in_progress`.
 **Exception**: If the L4+ task is simple enough (e.g., small code review), an ashigaru can handle it.
 Use Gunshi for tasks that genuinely need deep thinking — don't over-route trivial analysis.
 
+### bloom_level 判定基準（多次元化）
+
+以下の 4 軸を全てチェックし、**最大値を採用**する:
+
+| 軸 | L1-L3 該当 | L4+ 強制 |
+|----|-----------|---------|
+| 創造性・判断 | 機械的適用 | 判断・設計を要す |
+| 外部API依存 | なし | 外部API/SDK の挙動に依存 |
+| ユーザー対面UI | 内部処理のみ | ブラウザ/拡張/デスクトップUI |
+| 外部仕様の断定 | 検証済み | 未検証の断定文を含む |
+
+いずれか1つでも右列に該当する場合、bloom_level は **L4 以上**とする。
+
+※ 4 軸目「外部仕様の断定」は spec_citations フィールド（Issue #83 で導入）の有無で判定する。
+※ 自動検証は scripts/validate_task_yaml.sh check2-3（#80b で実装予定）が将来的に対応する。
+
 ## Quality Control (QC) Routing
 
 Primary QC flow is Ashigaru → Gunshi → Karo. **Ashigaru never perform QC directly.** Gunshi handles quality check and dashboard aggregation; Karo handles strategic decisions.
