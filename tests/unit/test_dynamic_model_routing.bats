@@ -1010,7 +1010,10 @@ print(len(doc.get('history', [])))
 
 @test "TC-FAM-001: 完全一致の足軽が存在 → ashigaru1 を返す（Spark）" {
     load_adapter_with "${TEST_TMP}/settings_mixed_cli.yaml"
-    result=$(find_agent_for_model "gpt-5.3-codex-spark")
+    # tmuxをモックして「pane未発見→最初の候補を即返す」ユニットテスト動作を保証
+    local mock_dir; mock_dir=$(mktemp -d)
+    printf '#!/bin/sh\n' > "$mock_dir/tmux" && chmod +x "$mock_dir/tmux"
+    PATH="$mock_dir:$PATH" result=$(find_agent_for_model "gpt-5.3-codex-spark")
     [ "$result" = "ashigaru1" ]
 }
 
@@ -1048,14 +1051,20 @@ print(len(doc.get('history', [])))
 
 @test "TC-FAM-007: 複数の同モデル足軽 → 番号最小を返す（ashigaru1）" {
     load_adapter_with "${TEST_TMP}/settings_all_spark.yaml"
-    result=$(find_agent_for_model "gpt-5.3-codex-spark")
+    # tmuxをモックして「pane未発見→最小番号の候補を即返す」ユニットテスト動作を保証
+    local mock_dir; mock_dir=$(mktemp -d)
+    printf '#!/bin/sh\n' > "$mock_dir/tmux" && chmod +x "$mock_dir/tmux"
+    PATH="$mock_dir:$PATH" result=$(find_agent_for_model "gpt-5.3-codex-spark")
     [ "$result" = "ashigaru1" ]
 }
 
 @test "TC-FAM-008: capability_tiersなし設定でも動作する（後方互換）" {
     load_adapter_with "${TEST_TMP}/settings_no_tiers.yaml"
     # no_tiersでもagents定義がある場合はSpark足軽を探して返す
-    result=$(find_agent_for_model "gpt-5.3-codex-spark")
+    # tmuxをモックして「pane未発見→最初の候補を即返す」ユニットテスト動作を保証
+    local mock_dir; mock_dir=$(mktemp -d)
+    printf '#!/bin/sh\n' > "$mock_dir/tmux" && chmod +x "$mock_dir/tmux"
+    PATH="$mock_dir:$PATH" result=$(find_agent_for_model "gpt-5.3-codex-spark")
     [ "$result" = "ashigaru1" ]
 }
 

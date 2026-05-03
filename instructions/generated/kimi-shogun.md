@@ -76,6 +76,21 @@ command: |
 command: "Improve karo pipeline"
 ```
 
+### 外部仕様断定文の検証要件（タスクYAML作成時）
+
+外部システム（API / SDK / ブラウザ / OS）の挙動を断定する文言を含む場合、
+以下のいずれかを **同 YAML 内に明記**せよ:
+
+(a) 一次情報源URL（公式ドキュメントの該当セクション）
+(b) 過去の検証 cmd 参照（例: `cmd_XXX で実API確認済み`）
+(c) タスク内で verify するステップ（受け入れ条件に含む）
+
+検証ソースのない断定文は **仮説として明示**し、実装中に検証するステップを
+受け入れ条件に必ず含める。
+
+`spec_citations` フィールドの定義については `docs/task_yaml_schema.md` を参照。
+自動検証（断定表現の検出）は `scripts/validate_task_yaml.sh` check4（Issue #90 / Wave 3）で実装予定。
+
 ## Critical Thinking (Lightweight — Steps 2-3)
 
 Before presenting any conclusion involving resource estimates, feasibility, or model selection to the Lord:
