@@ -645,6 +645,19 @@ skill:
 logging:
   level: info  # debug | info | warn | error
   path: "$SCRIPT_DIR/logs/"
+
+# QCトリガー設定
+qc_trigger:
+  # L4以上のタスク完了時 → 軍師QC必須。QCレポートなしにdone禁止。
+  gunshi_qc_threshold: 4
+  # L1-L3 → 軍師の簡易QCで可（deliverable存在・スコープ一致のみ）
+  karo_simple_qc_range: [1, 2, 3]
+  # 以下のいずれかを含むタスクは bloom_level に関わらず軍師QC必須
+  forced_conditions:
+    - external_dependency_not_none  # 外部API/SDK 接触（external_dependency != none）
+    - user_facing_ui_true           # ブラウザ拡張/デスクトップUI（user_facing_ui: true）
+    - touches_user_setup_docs       # docs/user-setup.md 等ユーザー向け文書を編集
+    - touches_api_contract          # 外部APIコントラクトに依存する実装
 EOF
     log_success "settings.yaml を作成しました"
 else
