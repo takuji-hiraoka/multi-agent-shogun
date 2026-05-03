@@ -99,3 +99,144 @@ make_yaml() {
     assert_output --partial "ng.yaml"
     refute_output --partial "ok.yaml"
 }
+
+# ──────────────────────────────────────────────
+# check2: external_dependency 整合
+# ──────────────────────────────────────────────
+
+@test "T-VTY-008: external_dep=notion_api, L3 → ERROR" {
+    cat > "$TEST_TMP/ext_dep_error.yaml" <<'YAML'
+task:
+  bloom_level: L3
+  assigned_to: ashigaru1
+  external_dependency: notion_api
+  status: assigned
+YAML
+    run bash "$VALIDATE_SCRIPT" "$TEST_TMP/ext_dep_error.yaml"
+    [ "$status" -eq 1 ]
+    assert_output --partial "[ERROR]"
+    assert_output --partial "外部API依存タスクは bloom_level L4+ 必須"
+}
+
+@test "T-VTY-009: external_dep=none, L3 → PASS" {
+    cat > "$TEST_TMP/ext_dep_none.yaml" <<'YAML'
+task:
+  bloom_level: L3
+  assigned_to: ashigaru1
+  external_dependency: none
+  status: assigned
+YAML
+    run bash "$VALIDATE_SCRIPT" "$TEST_TMP/ext_dep_none.yaml"
+    [ "$status" -eq 0 ]
+    refute_output --partial "[ERROR]"
+    assert_output --partial "PASS"
+}
+
+# ──────────────────────────────────────────────
+# check3: manual_verification 整合
+# ──────────────────────────────────────────────
+
+@test "T-VTY-010: user_facing_ui=true, manual_verification.required=false → ERROR" {
+    cat > "$TEST_TMP/mv_false.yaml" <<'YAML'
+task:
+  bloom_level: L3
+  assigned_to: ashigaru1
+  user_facing_ui: true
+  manual_verification:
+    required: false
+  status: assigned
+YAML
+    run bash "$VALIDATE_SCRIPT" "$TEST_TMP/mv_false.yaml"
+    [ "$status" -eq 1 ]
+    assert_output --partial "[ERROR]"
+    assert_output --partial "manual_verification.required が false/未設定"
+}
+
+@test "T-VTY-011: user_facing_ui=true, required=true → PASS" {
+    cat > "$TEST_TMP/mv_true.yaml" <<'YAML'
+task:
+  bloom_level: L3
+  assigned_to: ashigaru1
+  user_facing_ui: true
+  manual_verification:
+    required: true
+  status: assigned
+YAML
+    run bash "$VALIDATE_SCRIPT" "$TEST_TMP/mv_true.yaml"
+    [ "$status" -eq 0 ]
+    refute_output --partial "[ERROR]"
+    assert_output --partial "PASS"
+}
+
+# ──────────────────────────────────────────────
+# check4: spec_citations 欠如警告
+# ──────────────────────────────────────────────
+
+@test "T-VTY-012: spec_assumptions非空, spec_citations未設定 → WARN" {
+    cat > "$TEST_TMP/no_citations.yaml" <<'YAML'
+task:
+  bloom_level: L3
+  assigned_to: ashigaru1
+  spec_assumptions:
+    - "APIはv2.0以降のみ対応"
+  status: assigned
+YAML
+    run bash "$VALIDATE_SCRIPT" "$TEST_TMP/no_citations.yaml"
+    [ "$status" -eq 0 ]
+    assert_output --partial "[WARN]"
+    assert_output --partial "外部仕様断定文に出典を付与せよ"
+}
+
+@test "T-VTY-013: spec_assumptions非空, spec_citations設定 → PASS" {
+    cat > "$TEST_TMP/with_citations.yaml" <<'YAML'
+task:
+  bloom_level: L3
+  assigned_to: ashigaru1
+  spec_assumptions:
+    - "APIはv2.0以降のみ対応"
+  spec_citations:
+    - "https://example.com/api-docs"
+  status: assigned
+YAML
+    run bash "$VALIDATE_SCRIPT" "$TEST_TMP/with_citations.yaml"
+    [ "$status" -eq 0 ]
+    refute_output --partial "[ERROR]"
+    assert_output --partial "PASS"
+}
+
+# ──────────────────────────────────────────────
+# check5: forced_conditions QCタスク確認
+# ──────────────────────────────────────────────
+
+@test "T-VTY-014: forced_conditions該当, gunshi idle → WARN" {
+    cat > "$TEST_TMP/forced.yaml" <<'YAML'
+task:
+  bloom_level: L4
+  assigned_to: ashigaru1
+  external_dependency: github_api
+  status: assigned
+YAML
+    cat > "$TEST_TMP/gunshi.yaml" <<'YAML'
+task:
+  status: idle
+YAML
+    GUNSHI_YAML_PATH="$TEST_TMP/gunshi.yaml" run bash "$VALIDATE_SCRIPT" "$TEST_TMP/forced.yaml"
+    [ "$status" -eq 0 ]
+    assert_output --partial "[WARN]"
+    assert_output --partial "軍師QCタスクが未アサイン"
+}
+
+@test "T-VTY-015: forced_conditions非該当 → PASS（WARNなし）" {
+    cat > "$TEST_TMP/not_forced.yaml" <<'YAML'
+task:
+  bloom_level: L3
+  assigned_to: ashigaru1
+  external_dependency: none
+  user_facing_ui: false
+  status: assigned
+YAML
+    run bash "$VALIDATE_SCRIPT" "$TEST_TMP/not_forced.yaml"
+    [ "$status" -eq 0 ]
+    refute_output --partial "[WARN]"
+    assert_output --partial "PASS"
+}
