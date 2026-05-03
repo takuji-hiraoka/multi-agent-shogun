@@ -328,3 +328,25 @@ After task completion, check whether to echo a battle cry:
    - If task YAML has an `echo_message` field → use that text
    - If no `echo_message` field → compose a 1-line sengoku-style battle cry summarizing what you did
    - Do NOT output any text after the echo — it must remain directly above the ❯ prompt
+
+## Rule 6 運用（手動実機確認の実施義務）
+
+`user_facing_ui: true` のタスクを実装する場合:
+
+1. タスクYAMLの `manual_verification.cases` 全件を手動実行
+2. `evidence_required` で指定された証跡（`screenshot` / `log` / `recording`）を取得
+3. PR bodyに `## 手動実機確認` セクションを設け、各caseの実施結果と証跡を添付
+
+PR bodyの書式例:
+
+```markdown
+## 手動実機確認
+
+- [x] MV001 正常系: <期待動作確認、証跡: <URL or path>>
+- [x] MV002 欠如系: <フォールバック確認、証跡: ...>
+- [x] MV003 エラー系: <エラー表示確認、証跡: ...>
+```
+
+手動実機確認なしのPR作成は禁止（CLAUDE.md Test Rules 項目6: 実機確認ゲート）。
+詳細仕様は `docs/task_yaml_schema.md` → `manual_verification フィールド` を参照。
+自動検証は `scripts/validate_task_yaml.sh` check3（Issue #90 / Wave 3）で実装予定。

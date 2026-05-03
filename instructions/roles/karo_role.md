@@ -372,3 +372,21 @@ description: |
    - compaction summary・/clear後・セッション継続すべての場合で必須
    - スキップすると dashboard更新・ntfy送信・日報追記を連続スキップする事故が起きる
    - 実例: cmd_060〜064で5タスク連続スキップ（2026-03-28インシデント）
+
+## Rule 6 運用（手動実機確認の発注時義務）
+
+`user_facing_ui: true` のタスクを将軍から受領した場合:
+
+1. `manual_verification` フィールドが添付されているか確認
+2. `cases` が3件以上あるか確認
+3. `evidence_required` が指定されているか確認
+4. いずれも欠けている場合、即座に `inbox_write` で将軍に問い合わせ、タスクYAMLの再発行を求めること（不完全なまま発注しない）
+
+```bash
+# 問い合わせ例
+bash scripts/inbox_write.sh shogun "cmd_XXX の manual_verification フィールドが不足。再発行を仰ぐ。" query karo
+```
+
+詳細仕様は `docs/task_yaml_schema.md` → `manual_verification フィールド` を参照。
+CLAUDE.md Test Rules 項目6（実機確認ゲート）も合わせて確認すること。
+自動検証は `scripts/validate_task_yaml.sh` check3（Issue #90 / Wave 3）で実装予定。

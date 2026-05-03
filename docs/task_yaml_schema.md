@@ -74,3 +74,52 @@ spec_assumptions: []
 
 ※ 自動検証（external_dependency != none / user_facing_ui: true かつ bloom_level L3 以下の検出）は
   scripts/validate_task_yaml.sh check2-3（Issue #90 / Wave 3）で実装予定。
+
+## manual_verification フィールド
+
+`user_facing_ui: true` のタスクに必須。Chrome拡張・WebアプリなどCIで完全検証できない機能の手動実機確認仕様を定義する。
+
+```yaml
+manual_verification:
+  required: true | false  # user_facing_ui: true なら強制 true
+  cases:
+    - id: MV001
+      scenario: "正常系"
+      expected: "期待する動作"
+    - id: MV002
+      scenario: "欠如系（プロパティ欠如など）"
+      expected: "適切なフォールバック"
+    - id: MV003
+      scenario: "エラー系（認証エラーなど）"
+      expected: "エラーメッセージ表示"
+  evidence_required: screenshot | log | recording
+```
+
+### フィールド定義
+
+| キー | 必須 | 説明 |
+|------|------|------|
+| `required` | ✅ 必須 | 実機確認が必要か（`user_facing_ui: true` なら強制 `true`） |
+| `cases` | ✅ 必須 | テストケース一覧（最低3件） |
+| `evidence_required` | ✅ 必須 | 証跡の種類（`screenshot` / `log` / `recording`） |
+
+各 case の必須キー:
+
+| キー | 必須 | 説明 |
+|------|------|------|
+| `id` | ✅ 必須 | ケースID（例: `MV001`） |
+| `scenario` | ✅ 必須 | テストシナリオの説明 |
+| `expected` | ✅ 必須 | 期待する動作 |
+
+### ルール
+
+- `user_facing_ui: true` のタスクは `manual_verification.required: true` 必須
+- `cases` は最低3件（正常系・欠如系・エラー系を含むことを推奨）
+- 足軽はPR bodyに `## 手動実機確認` セクションを設け、各caseの実施結果と証跡を記載する
+- 詳細ルールは `CLAUDE.md` Test Rules 項目6（実機確認ゲート）を参照
+
+### 関連
+
+- 家老の受領義務: `instructions/karo.md` → Rule 6 運用（手動実機確認の発注時義務）
+- 足軽の実施義務: `instructions/ashigaru.md` → Rule 6 運用（手動実機確認の実施義務）
+- 自動検証は `scripts/validate_task_yaml.sh` check3（Issue #90 / Wave 3）で実装予定
