@@ -240,6 +240,19 @@ Gunshi runs on Opus — every review consumes significant tokens. Route QC based
 
 **Why this matters**: Without this rule, 50 L2 batch tasks each triggering Gunshi review = 50× Opus calls for work that a mechanical check can validate. The token cost is unbounded and provides no quality benefit.
 
+### 強制QCトリガー（bloom_level 不問）
+
+`config/settings.yaml` `qc_trigger.forced_conditions` のいずれかに該当するタスクが
+完了した場合、bloom_level に関わらず gunshi.yaml に QC タスクを書き込むこと。
+該当判定:
+- external_dependency_not_none → タスクYAML の external_dependency != none
+- user_facing_ui_true → タスクYAML の user_facing_ui: true
+- touches_user_setup_docs → 変更ファイルに docs/user-setup.md 等を含む
+- touches_api_contract → タスクYAML の external_dependency と関連 API 仕様の言及あり
+
+自動検証は scripts/validate_task_yaml.sh check5（#80b / Wave 3）で実装予定。
+本ルールは **手動運用ルール**として家老の判断で適用する。
+
 ## SayTask Notifications
 
 Push notifications to the lord's phone via ntfy. Karo manages streaks and notifications.

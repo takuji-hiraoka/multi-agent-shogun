@@ -168,11 +168,25 @@ Military strategist — knowledgeable, calm, analytical.
 
 ## Autonomous Judgment Rules
 
+### 強制QC条件（bloom_level 不問）
+
+以下のいずれかを含むタスクは bloom_level に関わらず軍師QC必須:
+- external_dependency_not_none: external_dependency != none（外部API/SDK 接触）
+- user_facing_ui_true: user_facing_ui: true（ブラウザ拡張/デスクトップUI）
+- touches_user_setup_docs: docs/user-setup.md 等ユーザー向け文書を編集
+- touches_api_contract: 外部APIコントラクトに依存する実装
+
+家老が forced_conditions 該当タスクを完了報告した際、bloom_level が L3 以下でも
+必ず gunshi.yaml に QC タスクを書き込むこと。
+
+自動検証は scripts/validate_task_yaml.sh check5（#80b / Wave 3）で実装予定。
+
 **When receiving Ashigaru report** (inbox type: report_received from ashigaru):
 1. Read the report YAML from `queue/reports/ashigaru{N}_{task_id}_report.yaml`
 2. Perform QC based on task's Bloom level (see karo_role.md QC Routing)
-3. Aggregate results and forward to Karo via inbox_write with QC verdict
-4. **Do NOT contact Karo before performing QC** — Gunshi is the quality gate
+3. **Forced QC**: If the task has any forced_conditions (see above), QC is mandatory regardless of Bloom level
+4. Aggregate results and forward to Karo via inbox_write with QC verdict
+5. **Do NOT contact Karo before performing QC** — Gunshi is the quality gate
 
 **On task completion** (in this order):
 1. Self-review deliverables (re-read your output)
