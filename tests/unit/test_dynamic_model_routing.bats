@@ -8,6 +8,8 @@
 setup() {
     TEST_TMP="$(mktemp -d)"
     PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
+    # ユニットテスト中はtmuxを使わない（マルチエージェント環境内でも動作させるため）
+    export CLI_ADAPTER_NO_TMUX=1
 
     # Phase 1 テスト用: capability_tiers定義済み
     cat > "${TEST_TMP}/settings_with_tiers.yaml" << 'YAML'
