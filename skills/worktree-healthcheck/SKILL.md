@@ -4,6 +4,7 @@ description: |
   worktree作成直後にプロジェクトの既存検証フロー（テスト/lint/build/pre-commit等）を
   1回流して「環境起因 Fail」と「仕様起因 Fail」を切り分ける診断スキル。
   npm/uv/poetry/cargo/go/bats/Makefile/pre-commit 等10種のプロジェクト形式を自動検出。
+  検証前に .env/local 等の機密設定ファイルを main worktree から symlink する Pre-flight も実行。
   「worktreeヘルスチェック」「wt検証」「healthcheck」「環境確認」「worktree確認」で起動。
   Do NOT use for: 通常のテスト実行（npm test 等を直接呼べばよい）、CI設定変更、本番環境チェック。
 argument-hint: "[worktree_path]"
@@ -31,7 +32,47 @@ worktree作成直後に既存の検証フロー（pre-commit/test/build等）を
 - CI設定・ワークフロー変更
 - 本番環境のヘルスチェック
 
-## 3. Detection Patterns（10件、priority順）
+## 3. Pre-flight: .env Symlink
+
+### 概要
+worktree内に機密設定ファイル（.env/local 等）が存在しない場合、
+main worktreeから symlink を作成してTest Rule 5（外部APIテスト必須）を充足する。
+
+### 検出条件
+以下を全て満たす場合に実行:
+- 現在のディレクトリが git worktree list の main worktree でない
+- main worktree の .env/local（または .env.local, .env.test）が存在する
+- 現在の worktree に同ファイルが存在しない
+
+### 実行手順
+```bash
+MAIN_WT=$(git worktree list | head -1 | awk '{print $1}')
+WTS=(
+  ".env/local"
+  ".env.local"
+  ".env.test"
+)
+for f in "${WTS[@]}"; do
+  if [ -f "$MAIN_WT/$f" ] && [ ! -e "$f" ]; then
+    mkdir -p "$(dirname "$f")"
+    ln -sf "$MAIN_WT/$f" "$f"
+    echo "[env-symlink] created: $f → $MAIN_WT/$f"
+  fi
+done
+```
+
+### 失敗時の振る舞い
+- main worktree が見つからない → skip (警告のみ)
+- symlink 先が既に存在する → skip (already_exists 表示)
+- permission denied → 警告を出力して続行 (healthcheck は止めない)
+
+### 出力例
+```
+[env-symlink] main worktree: /home/user/work/my-project
+[env-symlink] created: .env/local → /home/user/work/my-project/.env/local
+```
+
+## 4. Detection Patterns（10件、priority順）
 
 | priority | 検出ファイル/条件 | 判定条件 | 実行コマンド | timeout |
 |---|---|---|---|---|
@@ -48,14 +89,14 @@ worktree作成直後に既存の検証フロー（pre-commit/test/build等）を
 
 **No match**: SKIP + suggestion 出力（README / CONTRIBUTING / .github/workflows 参照を促す）
 
-## 4. Decision Rule（複数該当時の優先順位）
+## 5. Decision Rule（複数該当時の優先順位）
 
 priority 順で**最初にマッチしたパターンを採用**。より具体的・網羅的なものを優先。
 
 **例**: my-save2notion worktree で tools/pre-commit と package.json 両方存在する場合
 → priority 1 (tools/pre-commit) を採用。内部で validate を呼び出しているため1コマンドで完結。
 
-## 5. Output Format（Worktree Healthcheck Result 形式）
+## 6. Output Format（Worktree Healthcheck Result 形式）
 
 ```
 ## Worktree Healthcheck Result
@@ -80,7 +121,7 @@ priority 順で**最初にマッチしたパターンを採用**。より具体�
 <失敗起因の切り分け示唆>
 ```
 
-## 6. Failure Diagnostic（失敗時切り分け指針）
+## 7. Failure Diagnostic（失敗時切り分け指針）
 
 | カテゴリ | 検出キーワード | 推奨アクション |
 |---|---|---|
@@ -89,7 +130,21 @@ priority 順で**最初にマッチしたパターンを採用**。より具体�
 | ツール未インストール | permission denied, command not found, exec format error | 必要ツール導入（pre-commit/uv/poetry/cargo/go/bats）。chmod +x tools/pre-commit 確認 |
 | タイムアウト | duration > timeout_seconds, SIGTERM | 大規模テストスイートの可能性。家老に timeout 延長を依頼 |
 
-## 7. Examples（実行例）
+## 8. Examples（実行例）
+
+### Pre-flight 例（my-save2notion issue-102-create-db worktree）
+
+```
+[env-symlink] main worktree: /home/takuji.hiraoka/work/my-save2notion
+[env-symlink] created: .env/local → /home/takuji.hiraoka/work/my-save2notion/.env/local
+[env-symlink] not found in main: .env.local (skip)
+[env-symlink] not found in main: .env.test (skip)
+```
+
+```
+$ ls -la .env/local
+lrwxrwxrwx 1 user user 51 May  7 12:34 .env/local -> /home/takuji.hiraoka/work/my-save2notion/.env/local
+```
 
 ### PASS 例（multi-agent-shogun）
 
@@ -136,7 +191,7 @@ ERR! ELIFECYCLE
 - suggestion: README.md / CONTRIBUTING.md の "Test" セクション参照
 ```
 
-## 8. Guidelines（軍師・家老が判断する原則）
+## 9. Guidelines（軍師・家老が判断する原則）
 
 - worktree作成直後の**1回限定**（毎回流すのは過剰）
 - timeout 内に終わらない場合は家老に延長依頼
