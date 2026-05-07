@@ -40,7 +40,7 @@ pre_flight_env_symlink() {
     fi
 
     if [[ -e "$dst" ]] || [[ -L "$dst" ]]; then
-      ((skip_count++))
+      skip_count=$((skip_count + 1))
       echo "[env-symlink] already_exists: $f"
       continue
     fi
@@ -55,7 +55,7 @@ pre_flight_env_symlink() {
     fi
 
     if ln -sf "$src" "$dst" 2>/dev/null; then
-      ((symlink_count++))
+      symlink_count=$((symlink_count + 1))
       echo "[env-symlink] created: $f → $src"
     else
       echo "[env-symlink] WARN: symlink failed for $f"
