@@ -19,6 +19,59 @@ PATTERN=""
 CMD=""
 TIMEOUT=600
 
+pre_flight_env_symlink() {
+  local main_wt
+  main_wt=$(git worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2; exit}')
+
+  if [[ -z "$main_wt" ]] || [[ "$main_wt" == "$WORKTREE_PATH" ]]; then
+    return 0
+  fi
+
+  local env_files=(".env/local" ".env.local" ".env.test")
+  local symlink_count=0
+  local skip_count=0
+
+  for f in "${env_files[@]}"; do
+    local src="$main_wt/$f"
+    local dst="$WORKTREE_PATH/$f"
+
+    if [[ ! -f "$src" ]] && [[ ! -L "$src" ]]; then
+      continue
+    fi
+
+    if [[ -e "$dst" ]] || [[ -L "$dst" ]]; then
+      ((skip_count++))
+      echo "[env-symlink] already_exists: $f"
+      continue
+    fi
+
+    local dst_dir
+    dst_dir=$(dirname "$dst")
+    if [[ ! -d "$dst_dir" ]]; then
+      mkdir -p "$dst_dir" 2>/dev/null || {
+        echo "[env-symlink] WARN: mkdir failed for $dst_dir, skipping $f"
+        continue
+      }
+    fi
+
+    if ln -sf "$src" "$dst" 2>/dev/null; then
+      ((symlink_count++))
+      echo "[env-symlink] created: $f → $src"
+    else
+      echo "[env-symlink] WARN: symlink failed for $f"
+    fi
+  done
+
+  if [[ $symlink_count -eq 0 ]] && [[ $skip_count -eq 0 ]]; then
+    echo "[env-symlink] no env files in main worktree to link"
+  fi
+}
+
+echo "## Pre-flight: .env Symlink"
+echo ""
+pre_flight_env_symlink
+echo ""
+
 # 検出ロジック (priority 1-10)
 if [[ -x tools/pre-commit ]]; then
   PATTERN="tools/pre-commit (priority 1)"

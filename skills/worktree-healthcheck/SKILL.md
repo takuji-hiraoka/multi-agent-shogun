@@ -45,20 +45,57 @@ main worktreeから symlink を作成してTest Rule 5（外部APIテスト必�
 - 現在の worktree に同ファイルが存在しない
 
 ### 実行手順
+healthcheck.sh の冒頭で `pre_flight_env_symlink()` が自動実行される:
+
 ```bash
-MAIN_WT=$(git worktree list | head -1 | awk '{print $1}')
-WTS=(
-  ".env/local"
-  ".env.local"
-  ".env.test"
-)
-for f in "${WTS[@]}"; do
-  if [ -f "$MAIN_WT/$f" ] && [ ! -e "$f" ]; then
-    mkdir -p "$(dirname "$f")"
-    ln -sf "$MAIN_WT/$f" "$f"
-    echo "[env-symlink] created: $f → $MAIN_WT/$f"
+pre_flight_env_symlink() {
+  local main_wt
+  main_wt=$(git worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2; exit}')
+
+  # main worktree取得失敗 / 自身が main worktree → skip
+  if [[ -z "$main_wt" ]] || [[ "$main_wt" == "$WORKTREE_PATH" ]]; then
+    return 0
   fi
-done
+
+  local env_files=(".env/local" ".env.local" ".env.test")
+  local symlink_count=0
+  local skip_count=0
+
+  for f in "${env_files[@]}"; do
+    local src="$main_wt/$f"
+    local dst="$WORKTREE_PATH/$f"
+
+    if [[ ! -f "$src" ]] && [[ ! -L "$src" ]]; then
+      continue  # main側に存在しない → skip
+    fi
+
+    if [[ -e "$dst" ]] || [[ -L "$dst" ]]; then
+      ((skip_count++))
+      echo "[env-symlink] already_exists: $f"
+      continue
+    fi
+
+    local dst_dir
+    dst_dir=$(dirname "$dst")
+    if [[ ! -d "$dst_dir" ]]; then
+      mkdir -p "$dst_dir" 2>/dev/null || {
+        echo "[env-symlink] WARN: mkdir failed for $dst_dir, skipping $f"
+        continue
+      }
+    fi
+
+    if ln -sf "$src" "$dst" 2>/dev/null; then
+      ((symlink_count++))
+      echo "[env-symlink] created: $f → $src"
+    else
+      echo "[env-symlink] WARN: symlink failed for $f"
+    fi
+  done
+
+  if [[ $symlink_count -eq 0 ]] && [[ $skip_count -eq 0 ]]; then
+    echo "[env-symlink] no env files in main worktree to link"
+  fi
+}
 ```
 
 ### 失敗時の振る舞い
@@ -68,7 +105,8 @@ done
 
 ### 出力例
 ```
-[env-symlink] main worktree: /home/user/work/my-project
+## Pre-flight: .env Symlink
+
 [env-symlink] created: .env/local → /home/user/work/my-project/.env/local
 ```
 
@@ -135,10 +173,9 @@ priority 順で**最初にマッチしたパターンを採用**。より具体�
 ### Pre-flight 例（my-save2notion issue-102-create-db worktree）
 
 ```
-[env-symlink] main worktree: /home/takuji.hiraoka/work/my-save2notion
+## Pre-flight: .env Symlink
+
 [env-symlink] created: .env/local → /home/takuji.hiraoka/work/my-save2notion/.env/local
-[env-symlink] not found in main: .env.local (skip)
-[env-symlink] not found in main: .env.test (skip)
 ```
 
 ```
