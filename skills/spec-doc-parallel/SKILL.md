@@ -146,10 +146,10 @@ switch (message.type) {
 
 ## 5. Examples（cmd_205/206/208 実プロジェクトからの引用）
 
-### 5.1 cmd_205設計書 セクション10.1 — 共有ファイル衝突リスク評価表（原型）
+### 5.1 cmd_206設計書 セクション10.1 — 共有ファイル衝突リスク評価表（原型）
 
-**引用元**: `docs/specs/issue-71-73-duplicate-overwrite.md` セクション10
-**PR**: #111（MERGED）、ブランチ: `feat/issue-71-73-duplicate-overwrite`
+**引用元**: `docs/specs/issue-102-create-database.md` セクション10.1
+**PR**: #114（MERGED）、ブランチ: `feat/issue-102-create-db`
 
 このセクションが本スキルの「N.1 共有ファイル衝突リスク評価テーブル」の原型。
 `popup/main.ts` への State union 追加が「衝突リスク高」と判定され、確定形ルールが作られた最初の事例。
@@ -157,11 +157,9 @@ switch (message.type) {
 **実例の洞察**: 判定根拠コメント（「同じ型に append → 順序衝突の可能性」等）を表に含めることで、
 足軽が自律的に判定できる基準が初めて明文化された。
 
-### 5.2 cmd_205設計書 セクション10.2 — マージ順序の推奨（原型）
+### 5.2 cmd_206設計書 セクション10.2 — マージ順序の推奨（原型）
 
-**引用元**: `docs/specs/issue-71-73-duplicate-overwrite.md` セクション10.2
-**revision_note**: subtask_205a_rev で付録C（Issue#73 OPEN維持セクション）が追加された。
-仕様変更時は旧版を git history に保全し、設計書本体を改訂するパターンの最初の事例。
+**引用元**: `docs/specs/issue-102-create-database.md` セクション10.2
 
 **実例のフロー**:
 ```
@@ -213,4 +211,3 @@ rebase衝突箇所が1ファイルに局所化された事例。「衝突を減�
 **例外（スキル不要）**:
 - 単一ファイル変更 / マージ順序が自明な場合（衝突リスク低）
 - 並行Issueが存在するが編集ファイルに重複がない場合
-EOF
