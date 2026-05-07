@@ -162,6 +162,10 @@
 !skills/shogun-screenshot/scripts/*.py
 !skills/spec-doc-parallel/
 !skills/spec-doc-parallel/SKILL.md
+!skills/worktree-healthcheck/
+!skills/worktree-healthcheck/SKILL.md
+!skills/worktree-healthcheck/scripts/
+!skills/worktree-healthcheck/scripts/*.sh
 
 # Python venv (explicit deny — whitelist patterns like LICENSE leak through !*/)
 .venv/
